@@ -13,7 +13,13 @@ class API():
     @staticmethod
     def _handle_error(r):
         if r.status_code != 200:
-            raise Exception(f'Api Error: Status Code {r.status_code}. Text: {r.text}')
+            error_message = json.loads(r.text)['message']
+            raise Exception(f'Api Error: Status Code {r.status_code}\n\nError Message: {error_message}\n')
+    
+    @staticmethod
+    def _random_float_between_zero_one():
+        rand_int_below_ten = Decimal(str(np.random.randint(11)))
+        return float(rand_int_below_ten / Decimal('10'))
 
     def get(self, endpoint, params={}, auth=None):
         url = f'{self.base_url}{endpoint}'
@@ -61,16 +67,13 @@ class API():
             if earliest_date_in_results < start_date:
                 return # no need to request additional data
             else:
-                rand_int_below_ten = Decimal(str(np.random.randint(11)))
-                wait_time = rand_int_below_ten / Decimal('10')
-                time.sleep(float(wait_time))
+                time.sleep(self._random_float_between_zero_one())
                 make_request(after=end_cursor)
-
 
         make_request()
 
         if len(all_results) > 0:
             all_results = pd.concat(all_results, sort=True).sort_values('created_at', ascending='True')
-            return all_results[start_date:]
+            return all_results[start_date:].copy().reset_index().to_dict(orient='records')
         else:
-            return None
+            return []

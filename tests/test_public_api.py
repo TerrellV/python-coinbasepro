@@ -2,8 +2,9 @@ import pytest
 
 import requests
 
-from coinbase_pro.public_api import CBProPublic
+from coinbase_pro import CBProPublic, CBProAuthenticated
 from coinbase_pro.api import API
+
 
 
 def test_get_asset_usd_price():
@@ -22,12 +23,12 @@ def test_get_asset_usd_price():
 
     cb = CBProPublic(sandbox_mode=False)
     
-    price = cb.get_asset_usd_price(working_symbol)
+    price = cb.asset_price(working_symbol)
 
     assert type(price) == str
     assert type(float(price)) == float
     assert price == requests.get(f'{base_url}products/{working_symbol.upper()}-USD/ticker').json()['price']
 
     with pytest.raises(Exception):
-        cb.get_asset_usd_price(unvalid_symbol)
+        cb.asset_price(unvalid_symbol)
     
