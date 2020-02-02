@@ -30,6 +30,10 @@ class CBProAuthenticated():
             return getattr(self.cb_public, name)
         except AttributeError:
             raise AttributeError(f'The authenticated and public api objects not not have attribute {name}.')
+    
+    def accounts(self):
+        accounts = self.api.get('accounts').json()
+        return accounts
 
     def fill_history(self, product_id, order_id=None, start_date=None, end_date=None):
         '''Get all fills associated with a given product id'''
@@ -83,12 +87,12 @@ if __name__ == '__main__':
         credentials = json.loads(f.read())
         auth_api = CBProAuthenticated(credentials)
 
-    asset_activity = auth_api.asset_activity(
-        asset_symbol='BTC',
-        start_date='2019-01-01',
-        end_date='2020-01-01'
-    )
+    # asset_activity = auth_api.asset_activity(
+    #     asset_symbol='BTC',
+    #     start_date='2019-01-01',
+    #     end_date='2020-01-01'
+    # )
 
-    print(type(asset_activity[0]['created_at']))
+    # print(json.dumps(asset_activity, indent=4))
 
-    print(json.dumps(asset_activity, indent=4))
+    print(auth_api.accounts)
