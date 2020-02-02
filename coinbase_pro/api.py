@@ -72,7 +72,7 @@ class API():
             all_results = pd.concat(all_results, sort=True).sort_values(date_field, ascending='True')
             df = all_results[start_date:].copy().reset_index()
             # print(type(df[date_field].dtypes))
-            df[date_field] = df[date_field].dt.strftime('%Y-%m-%d %H:%M:%S:%f')
+            df[date_field] = df[date_field].dt.strftime('%Y-%m-%d %H:%M:%S.%f')
             return df.to_dict(orient='records')
         else:
             return []
