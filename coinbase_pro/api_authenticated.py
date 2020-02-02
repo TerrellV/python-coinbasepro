@@ -80,7 +80,7 @@ class CBProAuthenticated():
     def completed_orders(self, product_id=None):
         orders = self.api.handle_page_nation(
             'orders',
-            date_field='created_at',
+            date_field='done_at',
             start_date='2019-01-01',
             auth=self.auth,
             params={'status':'done'}
@@ -96,6 +96,8 @@ if __name__ == '__main__':
         auth_api = CBProAuthenticated(credentials)
     
     orders = auth_api.completed_orders()
+
+    print(json.dumps(orders, indent=4))
     
 
     # asset_activity = auth_api.asset_activity(
