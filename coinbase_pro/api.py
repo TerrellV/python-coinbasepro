@@ -43,12 +43,8 @@ class API():
 
         def make_request(after=None):
             response = self.get(endpoint, params={**params, 'after':after}, auth=auth)
-
-            beginning_cursor = response.headers.get('cb-before', None) # start of page index; used for newer results
             end_cursor = response.headers.get('cb-after', None) # end of page index; used for older results
-
             data = response.json()
-
             number_of_results = len(data)
 
             if number_of_results == 0:

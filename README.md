@@ -1,11 +1,9 @@
 # Coinbase Pro Python API
 
-An unofficial python package for interacting with the Coinbase Pro API
-
-This package can be used to query both public and user specific exchange data.
-
+An unofficial python package for interacting with the Coinbase Pro API. This package can be used to query both public and user specific exchange data.
 
 ## Quick Start - Public
+
 ```python
 from coinbase_pro import CBProPublic
 
@@ -40,7 +38,9 @@ print(price_history)
 ```
 
 ## Quick Start - Authenticated
+
 In order to use the authenticated api, you will need to create a file named credentials.json with a secret, passphrase, and api_key. The credentials file should be formatted as follows.
+
 ```json
 # credentials.json
 
@@ -54,6 +54,7 @@ In order to use the authenticated api, you will need to create a file named cred
 Load your credentials file and pass it as a dictionary to the CBProAuthenticated class upon initialization.
 
 > **Warnings**:
+>
 >1. Never store your api credentials directly in your code
 >2. Never commit your credentials.json file to a git repository
 

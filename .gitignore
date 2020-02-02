@@ -5,3 +5,4 @@ __pycache__
 account_data
 manual_transactions.csv
 .vscode
+.pytest_cache
