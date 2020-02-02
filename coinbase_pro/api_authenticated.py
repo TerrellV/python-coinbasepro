@@ -30,10 +30,6 @@ class CBProAuthenticated():
             return getattr(self.cb_public, name)
         except AttributeError:
             raise AttributeError(f'The authenticated and public api objects not not have attribute {name}.')
-    
-    def accounts(self):
-        accounts = self.api.get('accounts').json()
-        return accounts
 
     def fill_history(self, product_id, order_id=None, start_date=None, end_date=None):
         '''Get all fills associated with a given product id'''
