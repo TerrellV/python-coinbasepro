@@ -38,7 +38,7 @@ class API():
         
         return r
 
-    def handle_page_nation(self, endpoint, start_date, params={}, auth=None):
+    def handle_page_nation(self, endpoint, start_date, date_field='created_at', params={}, auth=None):
         all_results = []
 
         def make_request(after=None):
@@ -52,10 +52,10 @@ class API():
                 return
 
             # flatten data; 
-            df = pd.io.json.json_normalize(data, sep='.')
-            df['created_at'] = pd.to_datetime(df['created_at'])
-            df = df.set_index('created_at')
-            df = df.sort_values('created_at', ascending=False)
+            df = pd.json_normalize(data, sep='.')
+            df[date_field] = pd.to_datetime(df[date_field])
+            df = df.set_index(date_field)
+            df = df.sort_values(date_field, ascending=False)
 
             all_results.append(df)
             earliest_date_in_results = df[-1:].index # last value
@@ -69,7 +69,7 @@ class API():
         make_request()
 
         if len(all_results) > 0:
-            all_results = pd.concat(all_results, sort=True).sort_values('created_at', ascending='True')
+            all_results = pd.concat(all_results, sort=True).sort_values(date_field, ascending='True')
             return all_results[start_date:].copy().reset_index().to_dict(orient='records')
         else:
             return []

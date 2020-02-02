@@ -77,11 +77,26 @@ class CBProAuthenticated():
 
         return activity
 
+    def completed_orders(self, product_id=None):
+        orders = self.api.handle_page_nation(
+            'orders',
+            date_field='created_at',
+            start_date='2019-01-01',
+            auth=self.auth,
+            params={'status':'done'}
+        )
+
+        orders = list(filter(lambda order: order['done_reason'] == 'filled', orders))
+
+        return orders
 
 if __name__ == '__main__':
     with open('credentials.json') as f:
         credentials = json.loads(f.read())
         auth_api = CBProAuthenticated(credentials)
+    
+    orders = auth_api.completed_orders()
+    
 
     # asset_activity = auth_api.asset_activity(
     #     asset_symbol='BTC',
@@ -90,5 +105,3 @@ if __name__ == '__main__':
     # )
 
     # print(json.dumps(asset_activity, indent=4))
-
-    print(auth_api.accounts)
