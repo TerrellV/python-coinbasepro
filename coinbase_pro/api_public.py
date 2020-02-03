@@ -18,6 +18,12 @@ class CBProPublic():
         price = self.api.get(endpoint).json()['price']
         return price
     
+    def exchange_rate(self, currency_pair):
+        '''Get the exchange_rate for a given asset'''
+        endpoint = f'products/{currency_pair.upper()}/ticker'
+        price = self.api.get(endpoint).json()['price']
+        return price
+
     def exchange_time(self):
         '''Return the exchange time in iso format'''
         endpoint = 'time'
@@ -32,4 +38,5 @@ class CBProPublic():
 
 if __name__ == '__main__':
     cb = CBProPublic()
-    h = cb.historical_prices('LTC-USD', candle_interval='hourly', start='2020-01-01', end='2020-02-01', debug=True)
+    # h = cb.historical_prices('LTC-USD', candle_interval='hourly', start='2020-01-01', end='2020-02-01', debug=True)
+    print(cb.exchange_rate('eth-BTC'))
