@@ -12,7 +12,7 @@ class CBProPublic():
         self.history = History(base_url)
         self.api = API(base_url)
     
-    def asset_price(self, currency):
+    def usd_price(self, currency):
         '''Get the price in USD for a given asset'''
         endpoint = f'products/{currency.upper()}-USD/ticker'
         price = self.api.get(endpoint).json()['price']
@@ -39,4 +39,4 @@ class CBProPublic():
 if __name__ == '__main__':
     cb = CBProPublic()
     # h = cb.historical_prices('LTC-USD', candle_interval='hourly', start='2020-01-01', end='2020-02-01', debug=True)
-    print(cb.exchange_rate('eth-BTC'))
+    # print(cb.exchange_rate('eth-BTC'))

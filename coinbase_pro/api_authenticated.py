@@ -98,6 +98,8 @@ if __name__ == '__main__':
     orders = auth_api.completed_orders()
 
     print(json.dumps(orders, indent=4))
+
+    # print(auth_api.api.get())
     
 
     # asset_activity = auth_api.asset_activity(
