@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="coinbasepro-api-python", # Replace with your own username
+    name="coinbasepro", # Replace with your own username
     version="0.0.1",
     author="TerrellV",
     author_email="terrell.vest@gmail.com",
