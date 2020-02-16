@@ -11,11 +11,9 @@ class API():
         self.base_url = base_url
     
     @staticmethod
-    def _handle_error(r):
-        if r.status_code != 200:
-            error_message = json.loads(r.text)['message']
-            raise Exception(f'Api Error: Status Code {r.status_code}\n\nError Message: {error_message}\n')
-    
+    def _http_error_message(e, r):
+        response_text = json.loads(r.text)['message']
+        return f'\n\nRequests HTTP error: {e}\n\n\tUrl: {r.url}\n\tStatus Code: {r.status_code}\n\tResponse Text: {response_text}\n\tNote: Check the url and endpoint\n'
     @staticmethod
     def _random_float_between_zero_one():
         rand_int_below_ten = Decimal(str(np.random.randint(11)))
@@ -23,20 +21,32 @@ class API():
 
     def get(self, endpoint, params={}, auth=None):
         url = f'{self.base_url}{endpoint}'
-        r = requests.get(url=url, auth=auth, params=params)
-
-        self._handle_error(r)
-
-        return r
+        
+        try:
+            r = requests.get(url=url, auth=auth, params=params)
+            r.raise_for_status()
+        except requests.ConnectionError as e:
+            raise e
+        except requests.HTTPError as e:
+            raise requests.HTTPError(self._http_error_message(e, r))
+        else:
+            return r
 
     def post(self, endpoint, params={}, data={}, auth=None):
         url = f'{self.base_url}{endpoint}'
         data = json.dumps(data)
-        r = requests.post(url=url, auth=auth, params=params, data=data)
-
-        self._handle_error(r)
         
-        return r
+        try:
+            r = requests.post(url=url, auth=auth, params=params, data=data)
+            r.raise_for_status()
+        except requests.HTTPError as e:
+            raise requests.HTTPError(self._http_error_message(e, r))
+        except requests.ConnectTimeout as e:
+            raise e
+        except requests.ConnectionError as e:
+            raise e
+        else:
+            return r
 
     def handle_page_nation(self, endpoint, start_date, date_field='created_at', params={}, auth=None):
         all_results = []

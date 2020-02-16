@@ -1,7 +1,7 @@
 from coinbase_pro.api import API
 from coinbase_pro.history import History
 
-
+from datetime import datetime
 
 class CBProPublic():
     def __init__(self, sandbox_mode=False):
@@ -25,18 +25,23 @@ class CBProPublic():
         return price
 
     def exchange_time(self):
-        '''Return the exchange time in iso format'''
+        '''Return the exchange time in an iso formatted string'''
         endpoint = 'time'
-        iso_time = self.api.get(endpoint).json()['iso']
-        return iso_time
+        time_str = self.api.get(endpoint).json()['iso']
+        exchange_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S.%fZ')
+
+        return exchange_time.isoformat(sep=' ')
     
     def historical_prices(self, product_id, start=None, end=None, candle_interval='daily', debug=False):
         return self.history.build(product_id, start, end, candle_interval, debug)
 
     def trading_pairs(self):
-        return self.api.get('products').json()
+        product_info = self.api.get('products').json()
+
+        return [d['id'] for d in product_info]
 
 if __name__ == '__main__':
     cb = CBProPublic()
+    print(cb.api.get('fake_endpoint'))
     # h = cb.historical_prices('LTC-USD', candle_interval='hourly', start='2020-01-01', end='2020-02-01', debug=True)
     # print(cb.exchange_rate('eth-BTC'))
