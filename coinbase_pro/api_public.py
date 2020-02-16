@@ -34,7 +34,7 @@ class CBProPublic():
         return self.history.build(product_id, start, end, candle_interval, debug)
 
     def trading_pairs(self):
-        return self.api.get('products')
+        return self.api.get('products').json()
 
 if __name__ == '__main__':
     cb = CBProPublic()
