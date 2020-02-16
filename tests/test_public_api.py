@@ -16,6 +16,21 @@ def live_public_api():
     sandbox_mode = False
     return CBProPublic(sandbox_mode=False)
 
+def test_usd_market_volume(live_public_api):
+    market_data = live_public_api.usd_market_volume()
+
+    assert type(market_data) == list
+    assert {'currency_pair', 'usd_volume'} == set(market_data[0].keys())
+    assert market_data == sorted(market_data, key=lambda x: Decimal(x['usd_volume']), reverse=True)
+    assert all([type(x['usd_volume']) == str for x in market_data])
+    assert [Decimal(x['usd_volume']) for x in market_data]
+
+def test_twenty_four_hour_stats(live_public_api):
+    stats = live_public_api.twenty_four_hour_stats('XLM-USD')
+
+    assert type(stats) == dict
+    assert {'high', 'low', 'volume', 'open', 'volume_30day', 'last'} == set(stats.keys())
+
 
 def test_exchange_time(live_public_api):
     exchange_time = live_public_api.exchange_time()

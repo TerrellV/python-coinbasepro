@@ -1,7 +1,9 @@
 from coinbase_pro.api import API
 from coinbase_pro.history import History
-
+import time
+import json
 from datetime import datetime
+from decimal import Decimal
 
 class CBProPublic():
     def __init__(self, sandbox_mode=False):
@@ -12,6 +14,26 @@ class CBProPublic():
         self.history = History(base_url)
         self.api = API(base_url)
     
+
+    def twenty_four_hour_stats(self, product_id):
+        return self.api.get(f'products/{product_id}/stats').json()
+
+    def usd_market_volume(self):
+        '''get min $ volume of __/USD trading pairs in past 24 hrs'''
+        usd_trading_pairs = [x for x in self.trading_pairs() if x.split('-')[1] == 'USD']
+        
+        payload = []
+
+        for pair in usd_trading_pairs:
+            stats = self.twenty_four_hour_stats(pair)
+            volume = str(round(Decimal(stats['volume']) * Decimal(stats['low']), 2))
+            payload.append({'currency_pair': pair, 'usd_volume': volume})
+            time.sleep(0.04)
+        
+        sorted_payload = sorted(payload, key=lambda x: Decimal(x['usd_volume']), reverse=True)
+
+        return sorted_payload
+            
     def usd_price(self, currency):
         '''Get the price in USD for a given asset'''
         endpoint = f'products/{currency.upper()}-USD/ticker'
@@ -42,6 +64,10 @@ class CBProPublic():
 
 if __name__ == '__main__':
     cb = CBProPublic()
-    print(cb.api.get('fake_endpoint'))
+    for x in cb.usd_market_volume():
+        volume = Decimal(x['usd_volume'])
+        pair = x['currency_pair']
+        print(f'{pair} | {volume:,.2f}')
+
     # h = cb.historical_prices('LTC-USD', candle_interval='hourly', start='2020-01-01', end='2020-02-01', debug=True)
     # print(cb.exchange_rate('eth-BTC'))
