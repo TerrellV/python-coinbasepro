@@ -28,16 +28,20 @@ class CBProPublic():
             stats = self.twenty_four_hour_stats(pair)
             volume = str(round(Decimal(stats['volume']) * Decimal(stats['low']), 2))
             payload.append({'currency_pair': pair, 'usd_volume': volume})
-            time.sleep(0.04)
+            time.sleep(0.4)
         
         sorted_payload = sorted(payload, key=lambda x: Decimal(x['usd_volume']), reverse=True)
 
         return sorted_payload
             
-    def usd_price(self, currency):
+    def usd_price(self, currency, delay=False):
         '''Get the price in USD for a given asset'''
         endpoint = f'products/{currency.upper()}-USD/ticker'
         price = self.api.get(endpoint).json()['price']
+
+        if delay:
+            time.sleep(0.4)
+
         return price
     
     def exchange_rate(self, currency_pair):

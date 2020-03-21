@@ -2,6 +2,12 @@
 
 An unofficial python package for interacting with the Coinbase Pro API. This package can be used to query both public and user specific exchange data.
 
+## Installation
+
+```python
+pip install git+https://github.com/TerrellV/python-coinbasepro-api.git
+```
+
 ## Quick Start - Public
 
 ```python
@@ -13,8 +19,8 @@ public_api = CBProPublic()
 ```python
 # Bitcoin Price
 
-price = public_api.asset_price('btc')
-print(price) # returns most recent price as a string
+price = public_api.usd_price('btc')
+print(price) # returns most recent usd price as a string
 ```
 
 ```python
