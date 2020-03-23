@@ -1,7 +1,10 @@
+import time
+import json
+
+
 import numpy as np
 import pandas as pd
 
-import json
 
 from coinbase_pro.auth import Auth
 from coinbase_pro.api_public import CBProPublic
@@ -20,7 +23,7 @@ class CBProAuthenticated():
 
         base_url = SANDBOX_URL if sandbox_mode else LIVE_URL
 
-        self.cb_public = CBProPublic()
+        self.cb_public = CBProPublic(sandbox_mode=sandbox_mode)
         self.api = API(base_url)
         self.auth = Auth(**credentials)
         self.accounts = self.api.get('accounts', auth=self.auth).json()
@@ -29,7 +32,10 @@ class CBProAuthenticated():
         try:
             return getattr(self.cb_public, name)
         except AttributeError:
-            raise AttributeError(f'The authenticated and public api objects not not have attribute {name}.')
+            raise AttributeError(f'The authenticated and public api objects do not have attribute {name}.')
+
+    def refresh_accounts(self):
+        self.accounts = self.api.get('accounts', auth=self.auth).json()
 
     def fill_history(self, product_id, order_id=None, start_date=None, end_date=None):
         '''Get all fills associated with a given product id'''
@@ -89,6 +95,40 @@ class CBProAuthenticated():
         orders = list(filter(lambda order: order['done_reason'] == 'filled', orders))
 
         return orders
+
+    def market_buy(self, funds, product_id, delay=False):
+        '''send order to api and handle errors'''
+
+        order_payload = {
+            'side': 'buy',
+            'type': 'market',
+            'product_id': product_id,
+            'funds': str(funds),     
+        }
+
+        r = self.api.post('orders', params={}, data=order_payload, auth=self.auth)
+        
+        if delay:
+            time.sleep(0.4)
+        
+        return r
+
+    def market_sell(self, size, product_id, delay=False):
+        '''send order to api and handle errors'''
+        
+        order_payload = {
+            'side': 'sell',
+            'type': 'market',
+            'product_id': product_id,
+            'size': str(size),
+        }
+
+        r = self.api.post('orders', params={}, data=order_payload, auth=self.auth)
+        
+        if delay:
+            time.sleep(0.4)
+        
+        return r
 
 if __name__ == '__main__':
     with open('credentials.json') as f:
