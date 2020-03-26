@@ -102,7 +102,7 @@ class CBProAuthenticated():
         order_payload = {
             'side': 'buy',
             'type': 'market',
-            'product_id': product_id,
+            'product_id': product_id.upper(),
             'funds': str(funds),     
         }
 
@@ -119,7 +119,7 @@ class CBProAuthenticated():
         order_payload = {
             'side': 'sell',
             'type': 'market',
-            'product_id': product_id,
+            'product_id': product_id.upper(),
             'size': str(size),
         }
 
