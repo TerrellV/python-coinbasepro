@@ -13,6 +13,9 @@ class CBProPublic():
         base_url = SANDBOX_URL if sandbox_mode else LIVE_URL
         self.history = History(base_url)
         self.api = API(base_url)
+
+        self.products = self.api.get('products').json()
+        self.currencies = self.api.get('currencies').json()
     
 
     def twenty_four_hour_stats(self, product_id):

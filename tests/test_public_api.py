@@ -13,8 +13,13 @@ def live_base_api():
 
 @pytest.fixture
 def live_public_api():
-    sandbox_mode = False
     return CBProPublic(sandbox_mode=False)
+
+def test_currencies_and_products(live_public_api):
+
+    assert live_public_api.products
+    assert live_public_api.currencies
+    
 
 def test_usd_market_volume(live_public_api):
     market_data = live_public_api.usd_market_volume()
