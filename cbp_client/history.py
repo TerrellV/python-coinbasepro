@@ -50,7 +50,7 @@ class History():
     def _set_internal_variables(self, product_id, window_start_datetime, window_end_datetime, candle_interval, debug):
         self.debug = debug
         self.product_id = product_id.upper()
-        self.endpoint = f'/products/{self.product_id}/candles'
+        self.endpoint = f'products/{self.product_id}/candles'
 
         self.candle_length_seconds = self.api_granularities[candle_interval]
         self.candle_length_minutes = self.candle_length_seconds / self.ONE_MINUTE
