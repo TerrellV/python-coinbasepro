@@ -6,13 +6,13 @@ import numpy as np
 import pandas as pd
 
 
-from coinbase_pro.auth import Auth
-from coinbase_pro.api_public import CBProPublic
-from coinbase_pro.api import API
+from cbp_client.auth import Auth
+from cbp_client.api_public import CBProPublic
+from cbp_client.api import API
 
-pd.set_option('max_rows', 100)
-pd.set_option('max_columns', 15)
-pd.set_option('display.width', 500)
+# pd.set_option('max_rows', 100)
+# pd.set_option('max_columns', 15)
+# pd.set_option('display.width', 500)
 
 class CBProAuthenticated():
 

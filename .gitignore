@@ -1,8 +1,14 @@
+# directories
+build/
+dist/
+cbp_client.egg-info/
+__pycache__/
+.ipynb_checkpoints/
+.vscode/
+.pytest_cache/
+
+# files
 creds.json
 credentials.json
-__pycache__
-.ipynb_checkpoints
-account_data
-manual_transactions.csv
-.vscode
-.pytest_cache
+notes.md
+.pypirc

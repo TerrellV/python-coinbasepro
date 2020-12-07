@@ -1,9 +1,13 @@
-from coinbase_pro.api import API
-from coinbase_pro.history import History
+# built-in
 import time
 import json
 from datetime import datetime
 from decimal import Decimal
+
+# local
+from cbp_client.api import API
+from cbp_client.history import History
+
 
 class CBProPublic():
     def __init__(self, sandbox_mode=False):

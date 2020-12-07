@@ -2,8 +2,8 @@ import pytest
 
 import requests
 from decimal import Decimal
-from coinbase_pro import CBProPublic, CBProAuthenticated
-from coinbase_pro.api import API
+from cbp_client import CBProPublic, CBProAuthenticated
+from cbp_client.api import API
 from datetime import datetime
 
 @pytest.fixture

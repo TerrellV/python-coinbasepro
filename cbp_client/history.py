@@ -6,7 +6,7 @@ import itertools as it
 
 import numpy as np
 
-from coinbase_pro.api import API
+from cbp_client.api import API
 
 
 class History():

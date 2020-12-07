@@ -11,7 +11,7 @@ pip install git+https://github.com/TerrellV/python-coinbasepro-api.git
 ## Quick Start - Public
 
 ```python
-from coinbase_pro import CBProPublic
+from cbp_client import CBProPublic
 
 public_api = CBProPublic()
 ```
@@ -65,7 +65,7 @@ Load your credentials file and pass it as a dictionary to the CBProAuthenticated
 >2. Never commit your credentials.json file to a git repository
 
 ```python
-from coinbase_pro import CBProAuthenticated
+from cbp_client import CBProAuthenticated
 
 with open('credentials.json') as f:
     credentials = json.loads(f.read())
