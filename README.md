@@ -1,11 +1,19 @@
-# Coinbase Pro Python API
+# python-coinbasepro
 
-An unofficial python package for interacting with the Coinbase Pro API. This package can be used to query both public and user specific exchange data.
+An unofficial python package for interacting with the Coinbase Pro API. This package can be used to query both public and authenticated endpoints.
 
+> **WARNING**</br>
+>Use at your own risk. This project is currently under development.
 ## Installation
 
 ```python
-pip install git+https://github.com/TerrellV/python-coinbasepro-api.git
+# Install from pypi (most common)
+pip install cbp-client
+```
+
+```bash
+# Install from Github
+pip install git+https://github.com/TerrellV/python-coinbasepro.git
 ```
 
 ## Quick Start - Public
