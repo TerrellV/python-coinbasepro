@@ -21,20 +21,20 @@ pip install git+https://github.com/TerrellV/python-coinbasepro.git
 ```python
 from cbp_client import CBProPublic
 
-public_api = CBProPublic()
+api = CBProPublic()
 ```
 
 ```python
-# Bitcoin Price
+# Get bitcoin Price
 
-price = public_api.usd_price('btc')
-print(price) # returns most recent usd price as a string
+price = api.usd_price('btc')
+print(price) # returns most recent price, in USD, as a string
 ```
 
 ```python
 # Available Trading Pairs
 
-trading_pairs = public_api.trading_pairs()
+trading_pairs = api.trading_pairs()
 print(trading_pairs)
 ```
 
@@ -42,7 +42,7 @@ print(trading_pairs)
 # Historical Prices
 # Example: Hourly prices for LTC from 2017-10-01 to 2018-01-01
 
-price_history = public_api.historical_prices(
+price_history = api.historical_prices(
     product_id='LTC-USD',
     candle_interval='hourly',
     start='2017-10-01',

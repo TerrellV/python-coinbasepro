@@ -44,9 +44,6 @@ def test_exchange_time(live_public_api):
     assert type(datetime.fromisoformat(exchange_time)) == datetime
     assert datetime.strptime(exchange_time, '%Y-%m-%d %H:%M:%S.%f')
 
-def test_api_failure(live_base_api):
-    with pytest.raises(requests.HTTPError):
-        live_base_api.get('fake_endpoint')
 
 def test_trading_pairs(live_public_api):
     trading_pairs = live_public_api.trading_pairs()

@@ -1,46 +1,45 @@
-import json, time
+import json, time, re, inspect
 from decimal import Decimal
 
 import pandas as pd
 import numpy as np
 import requests
 
+from cbp_client.pagination import GetPaginatedEndpoint
 
-class API():
+# local helper functions
+def _random_float_between_zero_one():
+    rand_int_below_ten = Decimal(str(np.random.randint(11)))
+    return float(rand_int_below_ten / Decimal('10'))
+
+def _http_error_message(e, r):
+    response_text = json.loads(r.text)['message']
+    return inspect.cleandoc(f"""
+        Requests HTTP error: {e}
+            Url: {r.url}
+            Status Code: {r.status_code}
+            Response Text: {response_text}
+            Note: Check the url and endpoint
+    """)
+
+class API:
     def __init__(self, base_url):
-        self.base_url = base_url
+        self.base_url = re.sub('\/*$', '', base_url) # remove trailing slash
+
+    def _build_url(self, endpoint):
+        endpoint = re.sub('^\/*', '', endpoint) # remove leading slash
+        endpoint = re.sub('\/*$', '', endpoint) # remove trailing slash
+        return f'{self.base_url}/{endpoint}'
     
     @staticmethod
-    def _http_error_message(e, r):
-        response_text = json.loads(r.text)['message']
-        return f'\n\nRequests HTTP error: {e}\n\n\tUrl: {r.url}\n\tStatus Code: {r.status_code}\n\tResponse Text: {response_text}\n\tNote: Check the url and endpoint\n'
-    @staticmethod
-    def _random_float_between_zero_one():
-        rand_int_below_ten = Decimal(str(np.random.randint(11)))
-        return float(rand_int_below_ten / Decimal('10'))
-
-    def get(self, endpoint, params={}, auth=None):
-        url = f'{self.base_url}{endpoint}'
-        
-        try:
-            r = requests.get(url=url, auth=auth, params=params)
-            r.raise_for_status()
-        except requests.ConnectionError as e:
-            raise e
-        except requests.HTTPError as e:
-            raise requests.HTTPError(self._http_error_message(e, r))
-        else:
-            return r
-
-    def post(self, endpoint, params={}, data={}, auth=None):
-        url = f'{self.base_url}{endpoint}'
+    def _http_post(url, params={}, data={}, auth=None):
         data = json.dumps(data)
         
         try:
             r = requests.post(url=url, auth=auth, params=params, data=data)
             r.raise_for_status()
         except requests.HTTPError as e:
-            raise requests.HTTPError(self._http_error_message(e, r))
+            raise requests.HTTPError(_http_error_message(e, r))
         except requests.ConnectTimeout as e:
             raise e
         except requests.ConnectionError as e:
@@ -48,41 +47,31 @@ class API():
         else:
             return r
 
-    def handle_page_nation(self, endpoint, start_date, date_field='created_at', params={}, auth=None):
-        all_results = []
-
-        def make_request(after=None):
-            response = self.get(endpoint, params={**params, 'after':after}, auth=auth)
-            end_cursor = response.headers.get('cb-after', None) # end of page index; used for older results
-            data = response.json()
-            number_of_results = len(data)
-
-            if number_of_results == 0:
-                # no data available in this page (request)
-                return
-
-            # flatten data; 
-            df = pd.json_normalize(data, sep='.')
-            df[date_field] = pd.to_datetime(df[date_field])
-            df = df.set_index(date_field)
-            df = df.sort_values(date_field, ascending=False)
-
-            all_results.append(df)
-            earliest_date_in_results = df[-1:].index # last value
-
-            if earliest_date_in_results < start_date:
-                return # no need to request additional data
-            else:
-                time.sleep(self._random_float_between_zero_one())
-                make_request(after=end_cursor)
-
-        make_request()
-
-        if len(all_results) > 0:
-            all_results = pd.concat(all_results, sort=True).sort_values(date_field, ascending='True')
-            df = all_results[start_date:].copy().reset_index()
-            # print(type(df[date_field].dtypes))
-            df[date_field] = df[date_field].dt.strftime('%Y-%m-%d %H:%M:%S.%f')
-            return df.to_dict(orient='records')
+    @staticmethod
+    def _http_get(url, params={}, auth=None):
+        try:
+            r = requests.get(url=url, auth=auth, params=params)
+            r.raise_for_status()
+        except requests.ConnectionError as e:
+            raise e
+        except requests.HTTPError as e:
+            raise requests.HTTPError(_http_error_message(e, r))
         else:
-            return []
+            return r
+    
+    def get(self, endpoint, params={}, auth=None):
+        return self._http_get(self._build_url(endpoint), params=params, auth=auth)
+    
+    def post(self, endpoint, params, auth, data={}):
+        return self._http_post(url=self._build_url(endpoint), data={}, params=params, auth=auth)
+    
+    def get_paginated_endpoint(self, endpoint, start_date, date_field='created_at', params={}, auth=None):
+        paginated_endpoint = GetPaginatedEndpoint(
+            url=self._build_url(endpoint),
+            start_date=start_date,
+            date_field=date_field,
+            params=params,
+            auth=auth,
+            get_method=self._http_get
+        )
+        return paginated_endpoint()
