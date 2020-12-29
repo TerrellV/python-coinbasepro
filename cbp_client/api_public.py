@@ -102,7 +102,7 @@ class CBProPublic(API):
         return exchange_time.isoformat(sep=' ')
     
     def historical_prices(self, product_id, start=None, end=None, candle_interval='daily', debug=False):
-        return self.history.build(product_id, start, end, candle_interval, debug)
+        return self.history(product_id, start, end, candle_interval, debug)
 
     def trading_pairs(self):
         """Returns a list of available trading pairs as product-ids.

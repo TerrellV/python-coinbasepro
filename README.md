@@ -4,6 +4,7 @@ An unofficial python package for interacting with the Coinbase Pro API. This pac
 
 > **WARNING**</br>
 >Use at your own risk. This project is currently under development.
+
 ## Installation
 
 ```python

@@ -25,7 +25,7 @@ class History():
             'daily': self.ONE_MINUTE * 60 * 24
         }
 
-    def build(self, product_id, window_start_datetime, window_end_datetime, candle_interval, debug):
+    def __call__(self, product_id, window_start_datetime, window_end_datetime, candle_interval, debug):
         
         self._set_internal_variables(product_id, window_start_datetime, window_end_datetime, candle_interval, debug)
 
