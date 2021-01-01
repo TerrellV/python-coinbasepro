@@ -1,133 +1,166 @@
+"""
+Retrieves historical price data for a product.
+"""
+
+
 from datetime import datetime, timedelta
 import time
 import math
-import functools as ft
-import itertools as it
+import random
+from textwrap import dedent
+from typing import List, Generator
 
-import numpy as np
 
 from cbp_client.api import API
+from cbp_client.candle import Candle
+
+ONE_MINUTE = 60
+MAX_CANDLES_IN_REQUEST = 300
+INTERVALS = {
+    'minute': ONE_MINUTE,
+    'five_minute': ONE_MINUTE * 5,
+    'fifteen_minute': ONE_MINUTE * 15,
+    'hourly': ONE_MINUTE * 60,
+    'six_hour': ONE_MINUTE * 60 * 6,
+    'daily': ONE_MINUTE * 60 * 24
+}
 
 
-class History():
-    def __init__(self, base_url):
-        self.api = API(base_url)
-        
-        self.ONE_MINUTE = 60
-        self.MAX_CANDLES = 300
+def history(
+        product_id: str,
+        start: str,
+        end: str,
+        interval: str):
+    """
+    Constructs an iterable of Candles given a timeline.
 
-        self.api_granularities = {
-            'minute': self.ONE_MINUTE,
-            'five_minute': self.ONE_MINUTE * 5,
-            'fifteen_minute': self.ONE_MINUTE * 15,
-            'hourly': self.ONE_MINUTE * 60,
-            'six_hour': self.ONE_MINUTE * 60 * 6,
-            'daily': self.ONE_MINUTE * 60 * 24
-        }
+    Parameters
+    ----------
+    product_id : str
+        An identifier used by the exchange to represent a trading pair.
+        Example: 'btc-usd'
+    start : str
+        The earliest date in the desired timeline. ISO Format YYYY-MM-DD
+    end : str, Optional
+        The most recent date in the desired timeline. ISO Format YYYY-MM-DD.
+        Default=Today
+    interval : str, Optional
+        The size of each 'candle' returned.
+        Options: 'one_minute', 'five_minutes', 'fifteen_minutes', 'one_hour',
+        'six_hours', 'twenty_four_hours'. Default='twenty_four_hours'
+    """
 
-    def __call__(self, product_id, window_start_datetime, window_end_datetime, candle_interval, debug):
-        
-        self._set_internal_variables(product_id, window_start_datetime, window_end_datetime, candle_interval, debug)
+    timeline_start = datetime.fromisoformat(start)
+    timeline_end = datetime.fromisoformat(end)
 
-        if self.date_range_specified:
+    try:
+        candle_length = INTERVALS[interval]
+    except KeyError as e:
+        _handle_interval_error(e, interval)
 
-            request_array = np.arange(1, self.required_request_count + 1)
-            request_timeline = list(
-                ft.reduce(self._create_request_timeline, request_array, [])
-            )
+    timeline = _Timeline(
+        timeline_start,
+        timeline_end,
+        candle_length,
+        product_id
+    )
 
-            # complete all requests in the request timeline
-            candles = map(self._send_request, request_timeline)
-            candles = list(map(self._format_candle, it.chain(*candles)))
+    return _historical_candles(timeline)
 
-            return candles
 
-        else:
-            candles = self._send_request((None, None, 0))
-            candles = list(map(self._format_candle, candles))
-            return candles[:-1]
+class _Timeline:
+    """
+    Used alongside history module for querying /candles api
+    """
+    def __init__(self, start, end, candle_length, product_id):
+        self.product_id = product_id
+        self.start = start
+        self.end = end
+        self.candle_length = candle_length
+        self.requests_needed = self._requests_needed()
 
-    def _set_internal_variables(self, product_id, window_start_datetime, window_end_datetime, candle_interval, debug):
-        self.debug = debug
-        self.product_id = product_id.upper()
-        self.endpoint = f'products/{self.product_id}/candles'
+    def new(self, start, end):
+        return _Timeline(start, end, self.candle_length, self.product_id)
 
-        self.candle_length_seconds = self.api_granularities[candle_interval]
-        self.candle_length_minutes = self.candle_length_seconds / self.ONE_MINUTE
-        
-        self.date_range_specified = window_start_datetime and window_end_datetime
+    def _requests_needed(self):
+        """
+        Calculate the max number of requests needed to satisfy timeline.
 
-        if self.date_range_specified:
-            self.window_start_datetime = datetime.fromisoformat(window_start_datetime)
-            self.window_end_datetime = datetime.fromisoformat(window_end_datetime) # exclusive
-        else:
-            return
-        
-        window_delta_seconds = (self.window_end_datetime - self.window_start_datetime).total_seconds()
-        self.candles_in_window = int(window_delta_seconds / self.candle_length_seconds) - 1
-        self.required_request_count = math.ceil(self.candles_in_window / self.MAX_CANDLES)
+        To build sufficient timelines, often more than one request is required
+        to the API because only a limited number of items can be returned
+        at a time.
+        """
+        timeline_length = (self.end - self.start).total_seconds()
+        candle_count = int(timeline_length / self.candle_length)
+        return math.ceil(candle_count / MAX_CANDLES_IN_REQUEST)
 
-    def _create_request_timeline(self, accumulator, request_number):
-    
-        is_first_request = request_number == 1
-        on_last_request = request_number == self.required_request_count
-        
-        one_candle_delta = timedelta(minutes=self.candle_length_minutes)
-        request_delta = timedelta(minutes=self.candle_length_minutes * (self.MAX_CANDLES - 1))
-        
-        previous_request_end_date = accumulator[-1][1] if len(accumulator) > 0 else None
-        request_start_date = self.window_start_datetime if is_first_request else previous_request_end_date + one_candle_delta
-        request_end_date = self.window_end_datetime - one_candle_delta if on_last_request else request_start_date + request_delta
-        wait_time = 0 if is_first_request else self.api._random_float_between_zero_one()
-        accumulator.append((request_start_date, request_end_date, wait_time))
-        
-        return accumulator
 
-    def _send_request(self, request_info):
+def _historical_candles(timeline: _Timeline, previous_end=None) -> Generator:
+    """
+    Chain together multiple requests to build a list of historical candles.
 
-        start_iso, end_iso, wait_time = request_info
+    The products/{product-id}/candles will only return 300 candles. If
+    a request requires more than 300 candles, multiple requests are required.
+    This is useful for individuals who'd like to obtain large portions of
+    granual data. For example, one could use this to retrieve 2 years of hourly
+    data.
+    """
 
-        params = {
-            'granularity': self.candle_length_seconds,
-            'start': start_iso,
-            'end': end_iso,
-        }
+    for _ in range(timeline.requests_needed):
 
-        time.sleep(wait_time)
-        candles = self.api.get(self.endpoint, params=params).json()
-        
-        candles.reverse()
-        if self.debug:
-            candle_count = len(candles)
+        window = _next_window(timeline, previous_end)
+        data = _request_candles(window)
+        time.sleep(random.uniform(0.3, 0.4))  # pause, to respect rate limits
 
-            print(f'Candles Returned: {candle_count}\nTotal Candles Needed: {self.candles_in_window}')
-            oldest_candle_datetime = datetime.utcfromtimestamp(candles[0][0]).isoformat()
-            most_recent_candle_datetime = datetime.utcfromtimestamp(candles[-1][0]).isoformat()
-            
-            print(f'\nStart Date: {oldest_candle_datetime}\nEnd Date: {most_recent_candle_datetime}\n\n')
-        
-        return candles
-    
-    @staticmethod
-    def _format_candle(candle):
-        '''
-        Parameters:
-            candle (list): [
-                'unix_timestamp',
-                'low (int or float)',
-                'high (int or float)',
-                'open (int or float)',
-                'close (int or float)',
-                'volume (int or float)'
-            ]
-        '''
+        previous_end = window.end
 
-        candle_attributes = ['open_iso_datetime', 'low', 'high', 'open', 'close', 'volume']
-        
-        utc_datetime = datetime.utcfromtimestamp(candle[0]).isoformat()
-        prices_and_volume = list(map(str, candle[1:]))
-        
-        candle = [utc_datetime, *prices_and_volume]
-        candle = dict(zip(candle_attributes, candle))
-        
-        return candle
+        for candle in reversed(data):
+            yield Candle(*candle, duration=timeline.candle_length)
+
+
+def _next_window(timeline: _Timeline, previous_end: datetime) -> _Timeline:
+    """"
+    Return timline object with start and end date for next api request.
+    """
+    start = (
+        previous_end + timedelta(seconds=timeline.candle_length)
+        if previous_end is not None
+        else timeline.start
+    )
+
+    window_length = MAX_CANDLES_IN_REQUEST * timeline.candle_length
+
+    end = min(
+        start + timedelta(seconds=window_length),
+        timeline.end
+    )
+
+    if start > end:
+        raise ValueError(
+            f'Start must come before end. Start:{start}, End:{end}'
+        )
+
+    return timeline.new(start=start, end=end)
+
+
+def _request_candles(timeline: _Timeline) -> List[Candle]:
+    """
+    Call /candles endpoint given proper params
+    """
+    endpoint = f'products/{timeline.product_id}/candles'
+    params = {
+        'granularity': timeline.candle_length,
+        'start': timeline.start,
+        'end': timeline.end,
+    }
+
+    api = API(live=True)
+    return api.get(endpoint, params=params).json()
+
+
+def _handle_interval_error(e, interval):
+    error_message = f"""\
+    "{interval}" is an invalid interval.
+    Choose from: {list(INTERVALS.keys())}
+    """
+    raise KeyError(dedent(error_message)).with_traceback(e.__traceback__)

@@ -1,10 +1,13 @@
-import pytest
-
-import requests
 from decimal import Decimal
+from datetime import datetime
+
+import pytest
+import requests
+
 from cbp_client import CBProPublic, CBProAuthenticated
 from cbp_client.api import API
-from datetime import datetime
+
+
 
 @pytest.fixture
 def live_base_api():
@@ -14,6 +17,7 @@ def live_base_api():
 @pytest.fixture
 def live_public_api():
     return CBProPublic(sandbox_mode=False)
+
 
 def test_currencies_and_products(live_public_api):
 
@@ -29,6 +33,7 @@ def test_usd_market_volume(live_public_api):
     assert market_data == sorted(market_data, key=lambda x: Decimal(x['usd_volume']), reverse=True)
     assert all([type(x['usd_volume']) == str for x in market_data])
     assert [Decimal(x['usd_volume']) for x in market_data]
+
 
 def test_twenty_four_hour_stats(live_public_api):
     stats = live_public_api.twenty_four_hour_stats('XLM-USD')
@@ -52,6 +57,7 @@ def test_trading_pairs(live_public_api):
     assert len(trading_pairs) > 0
     assert all([pair in trading_pairs for pair in ['BTC-USD', 'ETH-USD', 'LTC-USD']])
 
+
 def test_get_exchange_rate(live_public_api):
     # confirm a string is returned
     # confirm the string can be converted to a decimal
@@ -62,6 +68,7 @@ def test_get_exchange_rate(live_public_api):
     assert type(price) == str
     assert type(Decimal(price)) == Decimal
     assert price == requests.get(f'https://api.pro.coinbase.com/products/{product_id}/ticker').json()['price']
+
 
 def test_get_asset_usd_price(live_public_api):
     # confirm a string is returned
