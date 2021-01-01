@@ -1,40 +1,54 @@
+
+import json
+import pathlib
+import time
+import random
+
 import pytest
-
-import json, pathlib
-
 import requests
-from decimal import Decimal
-from cbp_client import CBProPublic, CBProAuthenticated
-from cbp_client.api import API
-from datetime import datetime
 
+from cbp_client.api import API
+from cbp_client.auth import Auth
 
 @pytest.fixture
 def live_base_api():
-    return API('https://api.pro.coinbase.com/')
+    return API(live=True)
 
 @pytest.fixture
-def live_public_api():
-    return CBProPublic(sandbox_mode=False)
+def sandbox_base_api():
+    return API(live=False)
 
 @pytest.fixture
-def live_auth_api():
-    return CBProAuthenticated(
-        json.loads(pathlib.Path('credentials.json').read_text())['sandbox'],
-        sandbox_mode=True
-    )
+def sandbox_creds():
+    def func():
+        return json.loads(pathlib.Path('credentials.json').read_text())['sandbox']
+    return func
 
 
-def test_currencies_and_products(live_public_api):
+def test_api_post(sandbox_base_api, sandbox_creds):
+    data = {
+        'type': 'market',
+        'side': 'buy',
+        'product_id': 'BTC-USD',
+        'funds': '10'
+    }
+    auth = Auth(**sandbox_creds())
+    r = sandbox_base_api.post('orders', data=data, auth=auth)
 
-    assert live_public_api.products
-    assert live_public_api.currencies
+    assert r.url == 'https://api-public.sandbox.pro.coinbase.com/orders'
+    assert r.status_code == 200
+    time.sleep(random.uniform(0.3, 0.4))
+
+
+def test_api_get(live_base_api):
+    r = live_base_api.get('/products')
+
+    assert r.url == 'https://api.pro.coinbase.com/products'
+    assert r.status_code == 200
+    time.sleep(random.uniform(0.3, 0.4))
 
 
 def test_api_failure(live_base_api):
     with pytest.raises(requests.HTTPError):
         live_base_api.get('fake_endpoint')
-
-def test_pagination(live_auth_api):
-    # how do I test this beast of a class?
-    pass
+        time.sleep(random.uniform(0.3, 0.4))

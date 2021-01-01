@@ -8,10 +8,6 @@ import requests
 
 from cbp_client.pagination import GetPaginatedEndpoint
 
-# local helper functions
-def _random_float_between_zero_one():
-    rand_int_below_ten = Decimal(str(np.random.randint(11)))
-    return float(rand_int_below_ten / Decimal('10'))
 
 def _http_error_message(e, r):
     response_text = json.loads(r.text)['message']
@@ -26,7 +22,6 @@ def _http_error_message(e, r):
 
 def _http_post(url, params={}, data={}, auth=None):
     data = json.dumps(data)
-
     try:
         r = requests.post(url=url, auth=auth, params=params, data=data)
         r.raise_for_status()
@@ -65,14 +60,20 @@ class API:
         endpoint = re.sub(r'^\/*', '', endpoint) # remove leading slash
         endpoint = re.sub(r'\/*$', '', endpoint) # remove trailing slash
         return f'{self.base_url}/{endpoint}'
-    
+
     def get(self, endpoint, params={}, auth=None):
         return _http_get(self._build_url(endpoint), params=params, auth=auth)
-    
-    def post(self, endpoint, params, auth, data={}):
-        return _http_post(url=self._build_url(endpoint), data={}, params=params, auth=auth)
-    
-    def get_paginated_endpoint(self, endpoint, start_date, date_field='created_at', params={}, auth=None):
+
+    def post(self, endpoint, auth, params={}, data={}):
+        return _http_post(url=self._build_url(endpoint), params=params, data=data, auth=auth)
+
+    def get_paginated_endpoint(
+            self,
+            endpoint,
+            start_date,
+            date_field='created_at',
+            params={},
+            auth=None):
         paginated_endpoint = GetPaginatedEndpoint(
             url=self._build_url(endpoint),
             start_date=start_date,

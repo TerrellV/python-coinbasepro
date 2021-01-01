@@ -4,14 +4,13 @@ from datetime import datetime
 import pytest
 import requests
 
-from cbp_client import CBProPublic, CBProAuthenticated
+from cbp_client import CBProPublic
 from cbp_client.api import API
-
 
 
 @pytest.fixture
 def live_base_api():
-    return API('https://api.pro.coinbase.com/')
+    return API(live=True)
 
 
 @pytest.fixture
