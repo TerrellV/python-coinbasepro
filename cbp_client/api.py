@@ -6,7 +6,7 @@ import inspect
 
 import requests
 
-from cbp_client.pagination import GetPaginatedEndpoint
+from cbp_client.pagination import handle_pagination
 
 
 def _http_error_message(e, r):
@@ -80,12 +80,11 @@ class API:
         params={},
         auth=None
     ):
-        paginated_endpoint = GetPaginatedEndpoint(
+        return handle_pagination(
             url=self._build_url(endpoint),
             start_date=start_date,
             date_field=date_field,
             params=params,
-            auth=auth,
+            auth=None,
             get_method=_http_get
         )
-        return paginated_endpoint()
