@@ -1,44 +1,38 @@
 from decimal import Decimal
 from datetime import datetime
+from collections import namedtuple
+import types
 
 import pytest
 import requests
 
-from cbp_client import CBProPublic
+from cbp_client import PublicAPI
 from cbp_client.api import API
 
 
 @pytest.fixture
 def live_base_api():
-    return API(live=True)
+    return API(sandbox_mode=False)
 
 
 @pytest.fixture
 def live_public_api():
-    return CBProPublic(sandbox_mode=False)
+    return PublicAPI(sandbox_mode=False)
 
 
 def test_currencies_and_products(live_public_api):
 
-    assert live_public_api.products
+    assert live_public_api._products
     assert live_public_api.currencies
-    
-
-def test_usd_market_volume(live_public_api):
-    market_data = live_public_api.usd_market_volume()
-
-    assert type(market_data) == list
-    assert {'currency_pair', 'usd_volume'} == set(market_data[0].keys())
-    assert market_data == sorted(market_data, key=lambda x: Decimal(x['usd_volume']), reverse=True)
-    assert all([type(x['usd_volume']) == str for x in market_data])
-    assert [Decimal(x['usd_volume']) for x in market_data]
 
 
 def test_twenty_four_hour_stats(live_public_api):
     stats = live_public_api.twenty_four_hour_stats('XLM-USD')
+    actual_keys = set(stats.keys())
+    expected_keys = {'high', 'low', 'volume', 'open', 'volume_30day', 'last'}
 
-    assert type(stats) == dict
-    assert {'high', 'low', 'volume', 'open', 'volume_30day', 'last'} == set(stats.keys())
+    assert isinstance(stats, dict)
+    assert actual_keys == expected_keys
 
 
 def test_exchange_time(live_public_api):
@@ -49,34 +43,62 @@ def test_exchange_time(live_public_api):
     assert datetime.strptime(exchange_time, '%Y-%m-%d %H:%M:%S.%f')
 
 
-def test_trading_pairs(live_public_api):
-    trading_pairs = live_public_api.trading_pairs()
+@pytest.mark.parametrize(
+    'kwargs, expected_products',
+    [
+        ({'random': 'test'}, []),
+        ({'live': True}, ['001', '002']),
+        ({'fully_tradeable': True}, ['001']),
+        ({'live': False}, ['003'])
+    ]
+)
+def test_products(live_public_api, expected_products, kwargs):
+    # FakeProduct = namedtuple('FakeProduct', 'uid, id, fully_tradeable, live, quote, base')
 
-    assert type(trading_pairs) == list
-    assert len(trading_pairs) > 0
-    assert all([pair in trading_pairs for pair in ['BTC-USD', 'ETH-USD', 'LTC-USD']])
+    # live_public_api._products = [
+    #     FakeProduct(**{
+    #         'uid': '001',
+    #         'id': 'BTC-USD',
+    #         'fully_tradeable': True,
+    #         'live': True,
+    #         'quote': 'USD',
+    #         'base': 'BTC'
+    #     }),
+    #     FakeProduct(**{
+    #         'uid': '002',
+    #         'id': 'ETH-USD',
+    #         'fully_tradeable': False,
+    #         'live': True,
+    #         'quote': 'USD',
+    #         'base': 'ETH'
+    #     }),
+    #     FakeProduct(**{
+    #         'uid': '003',
+    #         'id': 'ETH-BTC',
+    #         'fully_tradeable': False,
+    #         'live': False,
+    #         'quote': 'BTC',
+    #         'base': 'ETH'
+    #     })
+    # ]
+    actual_products = live_public_api.products(**kwargs)
+
+    # expected = [
+    #     p
+    #     for p in live_public_api._products
+    #     if p.uid in expected_products
+    # ]
+    assert isinstance(actual_products, types.GeneratorType)
+    # assert list(actual_products) == expected
 
 
-def test_get_exchange_rate(live_public_api):
-    # confirm a string is returned
-    # confirm the string can be converted to a decimal
-
-    product_id = 'ETH-BTC'
-    price = live_public_api.exchange_rate(product_id)
-
-    assert type(price) == str
-    assert type(Decimal(price)) == Decimal
-    assert price == requests.get(f'https://api.pro.coinbase.com/products/{product_id}/ticker').json()['price']
-
-
-def test_get_asset_usd_price(live_public_api):
+def test_price(live_public_api):
     # confirm a string is returned
     # confirm the string can be converted to a decimal
 
     symbol = 'ETH'
-    price = live_public_api.usd_price(symbol)
+    price = live_public_api.price(symbol)
 
     assert type(price) == str
     assert type(Decimal(price)) == Decimal
     assert price == requests.get(f'https://api.pro.coinbase.com/products/{symbol}-USD/ticker').json()['price']
-    

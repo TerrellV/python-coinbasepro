@@ -1,80 +1,60 @@
 """Class for accessing public coinbase pro endpoints"""
 
 
-# built-in
-import time
 from datetime import datetime
-from decimal import Decimal
 from typing import List
-from collections import namedtuple
 
-# local
+from cbp_client.product import Product, is_fully_tradeable, is_live
 from cbp_client.api import API
-from cbp_client.history import history
+from cbp_client.history import History
 
 
-
-Product = namedtuple('Product', ['base', 'quote'])
-
-
-class CBProPublic(API):
+class PublicAPI(API):
     """
     Retrieve publicly available information from the Coinbase Pro API.
 
     Example
     -------
-    >>>CBProPublic.usd_price('btc')
+    >>>cb = PublicClient()
+    >>>cb.usd_price('btc')
     '10,000'
-    
+
     Arguments
     ---------
     sandbox_mode : bool
-        If true, use sandbox api, if false, use live api.
+        If true, use sandbox api, if false, use live api. Default = False
 
     Attributes
     ----------
-        history: ....
-        
-        products : list
-            Information about available products, also known as trading pairs.
-            
-            Example:
-            [{id: 'BTC-USD', quote_currency: 'USD', base_currency: 'BTC' ...}]
+    products : list
+        Information about available products, also known as trading pairs.
 
-        currencies : list
-            Information about listed currencies.
+        Example:
+        [{id: 'BTC-USD', quote_currency: 'USD', base_currency: 'BTC' ...}]
 
-            Example:
-            [{id: 'BTC', name: 'Bitcoin', status: 'online' ...}]
+    currencies : list
+        Information about listed currencies.
 
-        __api : cls
-            Private class to help simplify get and put requests to endpoints.
+        Example:
+        [{id: 'BTC', name: 'Bitcoin', status: 'online' ...}]
     """
 
-    LIVE_URL = 'https://api.pro.coinbase.com/'
-    SANDBOX_URL = 'https://api-public.sandbox.pro.coinbase.com/'
-
     def __init__(self, sandbox_mode=False):
-        
-        self.base_url = (
-            CBProPublic.SANDBOX_URL
-            if sandbox_mode
-            else CBProPublic.LIVE_URL
-        )
-        
-        super().__init__(base_url=self.base_url)
 
-        # self.history = History(self.base_url)
+        self.api = API(sandbox_mode)
+        self.History = History
+        self._products = list(self._decorated_products())
+        self.currencies = self.get('currencies').json()
 
-        self._products = self.get('products').json()
-        self._currencies = self.get('currencies').json()
+    def get(self, endpoint):
+        return self.api.get(endpoint)
 
     def twenty_four_hour_stats(self, product_id: str) -> dict:
         """
         Provides 24/hr stats for a specific asset.
 
-        Volume is in base currency units. open, high, low are in quote
-        currency units.
+        Defaults to USD trading pair unless specified. Volume is in base
+        currency units. open, high, low are in quote currency units.
 
         Endpoint
         --------
@@ -82,13 +62,13 @@ class CBProPublic(API):
 
         Example
         -------
-        >>> CBProPublic.twenty_four_hour_stats('btc-usd')
+        >>> PublicAPI.twenty_four_hour_stats('btc')
         {
-            "open": "6745.61000000", 
-            "high": "7292.11000000", 
-            "low": "6650.00000000", 
-            "volume": "26185.51325269", 
-            "last": "6813.19000000", 
+            "open": "6745.61000000",
+            "high": "7292.11000000",
+            "low": "6650.00000000",
+            "volume": "26185.51325269",
+            "last": "6813.19000000",
             "volume_30day": "1019451.11188405"
         }
 
@@ -98,98 +78,155 @@ class CBProPublic(API):
         """
         return self.get(f'products/{product_id}/stats').json()
 
-    def _get_trading_pairs(
-            self,
-            symbols: List[str, ...],
-            usd_only: bool=True
-        ) -> list:
-        pass
-        # usd_pairs = [
-        #     x
-        #     for x in self.trading_pairs
-        #     if x.split('-')[1] == 'USD'
-        # ]
+    def price(self, base_currency: str, quote_currency='USD') -> str:
+        '''
+        Returns the latest price for a given asset.
 
-        # if usd_only:
-        #     return [p for p in usd_pairs if p.split('-')[]]
+        By default, this method will seek a price using a USD trading pair. If
+        one does not exist, it will fail. If you'd like to price an asset
+        against a crypto asset, adjust the quote currency. For example
+        if you wanted to know "how much bitcoin can I get for one etherium?",
+        set base_currency='eth' and quote_currency='btc'.
 
-    def usd_market_volume(self, symbols: List[str, ...]) -> list:
-        """Return 24 hour volumes for given product-ids."""
-
-        all_usd_pairs = [
-            x
-            for x in self.trading_pairs()
-            if x.split('-')[1] == 'USD'
-        ]
-        filtered_pairs = [
-            x
-            for x in all_usd_pairs
-            if x.split('-')[0] in symbols
-        ]
-        payload = []
-
-        for pair in usd_trading_pairs:
-            stats = self.twenty_four_hour_stats(pair)
-            volume = str(round(Decimal(stats['volume']) * Decimal(stats['low']), 2))
-            payload.append({'currency_pair': pair, 'usd_volume': volume})
-            time.sleep(0.4)
-        
-        sorted_payload = sorted(payload, key=lambda x: Decimal(x['usd_volume']), reverse=True)
-
-        return sorted_payload
-            
-    def usd_price(self, currency: str, delay: bool=False) -> str:
-        '''Returns the latest price in USD for a given asset'''
-        endpoint = f'products/{currency.upper()}-USD/ticker'
+        Parameters
+        ----------
+        base_currency : str
+            The first symbol in a trading pair / product id. The currency you
+            are interested in getting a price for.
+        quote_currency : str
+            The second symbol in a trading pair / product id. The currency you
+            wish to price the base currency in. Default = USD
+        '''
+        base = base_currency.upper()
+        quote = quote_currency.upper()
+        endpoint = f'products/{base}-{quote}/ticker'
         price = self.get(endpoint).json()['price']
-        if delay: time.sleep(0.4)
         return price
-    
-    def exchange_rate(self, product_id: str) -> str:
-        """Returns the most recent exchange_rate for a given crypto asset.
-
-        Arguments
-        ---------
-        product_id : str
-            A currency pair seperated by -. For example 'btc-usd'  
-        """
-        endpoint = f'products/{product_id.upper()}/ticker'
-        return self.get(endpoint).json()['price']
 
     def exchange_time(self):
-        """Returns the current exchange time as an iso formatted string"""
+        """Returns the current exchange time as an ISO formatted string"""
         time_str = self.get('time').json()['iso']
         exchange_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S.%fZ')
 
         return exchange_time.isoformat(sep=' ')
-    
-    def historical_prices(self,
-            product_id,
+
+    def historical_prices(
+            self,
+            product_id: str,
             start=None,
             end=None,
-            candle_interval='daily',
-            debug=False
-        ) -> pd.Dataframe:
-        return self.history(product_id, start, end, candle_interval, debug)
-
-    @property
-    def products(self):
-        return self._products
-
-    @property
-    def currencies(self):
-        return self._currencies
-
-    @property
-    def usd_trading_pairs(self):
-        """Return USD trading pairs"""
-        return [p for p in self.trading_pairs if p.quote.lower() == 'usd']
-
-    @property
-    def trading_pairs(self):
-        """Returns a list of available trading pairs as product-ids.
-        
-            Sample product-id: 'btc-usd'
+            candle_interval='daily') -> List[History.Candle]:
         """
-        split_ids = [d['id'].split('-') for d in self.products]
-        return [Product(base, quote) for base, quote in split_ids]
+        Get historical data for a specifc product / trading pair.
+
+        This method is great for requesting large sets of historical data at
+        fine granularities. For example, one could request two years of
+        hourly or even minute candle data. Note, the coinbase api only returns
+        a max of 300 items per request. For that reason, longer timelines
+        with finer granularity might take some time to complete. A slight
+        delay has been built into this module for requests larger than 300
+        candles to ensure rate limits are respected.
+
+        Parameters
+        ----------
+        product_id : str
+            Product Identifier. For example 'ETH-BTC'
+        start : str
+            ISO formatted string representing the start datetime.
+        end : str, Optional
+            ISO formatted string representing the end datetime. Defaults to
+            now.
+        candle_interval : str, Optional
+            Length of each candle to be returned. To get daily data, set
+            candle_interval='daily'. Possible values: minute, five_minute,
+            fifteen_minute, hourly, six_hour, daily. Defaults to daily.
+
+        Returns
+        -------
+        generator
+            The returned object is a generator, meaning it wont run until you
+            begin iterating over it. It will only
+
+        """
+        return self.History(
+            start=start,
+            end=end,
+            product_id=product_id.upper(),
+            interval=candle_interval,
+            api=self.api
+        )()
+
+    def _usd_trading_pairs(self):
+        """Return USD trading pairs"""
+        return [p for p in self.trading_pairs if p.quote == 'USD']
+
+    def products(self, **keyword_args) -> List[Product]:
+        """
+        Filters for a list of products. Default return all.
+
+        A product is a trading pair offered on the exchange.
+        By default, all products offered by coinbase pro are returned. To
+        filter the results, pass in an a keyword=value pair to filter on.
+
+        Parameters
+        ----------
+        live_only : bool
+            Filters for only "live" trading pairs.
+            A pair is considered "live" when:
+                status='online'
+
+        fully_tradeable : bool
+            Filters for fully tradeable pairs. A trading pair is considered
+            "fully_tradeable" when:
+                status='online'
+                cancel_only=False
+                limit_only=False
+                post_only=False
+                trading_disabled=False
+
+        **keyword_args
+            Additionally, one can filter on any key returned by the products
+            endpoint. See the api docs for more info.
+            https://docs.pro.coinbase.com/#products
+
+        Example
+        -------
+        Get all products:
+        >>> PublicApi().products()
+
+        Filters for fully_tradeable products:
+        >>> PublicApi().products(fully_tradeable=True)
+
+        Filters for products quoted in USD
+        >>> PublicApi().products(quote='USD')
+
+        Filters for specific product
+        >>> PublicApi().products(id='BTC-USD')
+
+        Returns
+        -------
+        list
+            [Product('BTC-USD'), Product('ETH-USD'), ...]
+        """
+
+        def _should_include(product, keyword_args):
+            """Check if attributes with provided values exists on product"""
+            return all(
+                getattr(product, keyword.lower(), not value) == value.upper()
+                for keyword, value in keyword_args.items()
+            )
+
+        return [product
+                for product in self._products
+                if _should_include(product, keyword_args)]
+
+    def _decorated_products(self):
+        """Returns products with additional attributes.
+        Adds full_tradeable and is_live attributes to each product.
+        """
+        for product in self.get('products').json():
+            yield Product(
+                **product,
+                live=is_live(product),
+                fully_tradeable=is_fully_tradeable(product)
+            )

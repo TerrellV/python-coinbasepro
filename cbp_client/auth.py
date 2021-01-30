@@ -1,6 +1,7 @@
 import requests, time, hmac, hashlib, base64
 from requests.auth import AuthBase
 
+
 class Auth(AuthBase):
 
     def __init__(self, api_key, secret, passphrase):

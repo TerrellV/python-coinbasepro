@@ -3,11 +3,9 @@ import json
 import pathlib
 from decimal import Decimal
 
-import requests
-from decimal import Decimal
-from cbp_client import CBProPublic, CBProAuthenticated
+
+from cbp_client import CBProAuthenticated
 from cbp_client.api import API
-from datetime import datetime
 
 
 @pytest.fixture
