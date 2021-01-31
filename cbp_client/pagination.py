@@ -31,6 +31,11 @@ def handle_pagination(
         pe = GetPaginatedEndpoint()
         data = pe.walk_pages()
     """
+
+    # assumes all paginated endpoints require valid auth
+    if not isinstance(auth, Auth):
+        raise ValueError(f'Invalid Auth argument: {auth}')
+
     end_cursor = None
     start_date = datetime.fromisoformat(start_date)
 

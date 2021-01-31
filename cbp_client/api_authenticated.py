@@ -3,6 +3,9 @@ import time
 from cbp_client.auth import Auth
 from cbp_client.api_public import PublicAPI
 from collections import namedtuple
+from typing import Union, List
+from datetime import datetime
+from types import GeneratorType
 
 
 Account = namedtuple('Account', ['id',
@@ -20,19 +23,24 @@ class AuthAPI(PublicAPI):
         super().__init__(sandbox_mode)
 
         self.auth = Auth(**credentials)
-        self.accounts = []
+        self._accounts = []
         self.refresh_accounts()
+
+    def accounts(self, currency: str = None) -> Union[List[Account], Account]:
+
+        if currency is None:
+            return self._accounts
+
+        for account in self._accounts:
+            if account.currency.lower() == currency.lower():
+                return account
 
     def balance(self, symbol: str) -> str:
         '''Returns balance for specific currency in coinbase pro'''
-        symbol = symbol.lower()
-
-        for acct in self.accounts:
-            if acct.currency.lower() == symbol:
-                return acct.balance
+        return self.accounts(currency=symbol.lower()).balance
 
     def refresh_accounts(self):
-        self.accounts = [
+        self._accounts = [
             Account(**act)
             for act in self.api.get('accounts', auth=self.auth).json()
         ]
@@ -57,43 +65,17 @@ class AuthAPI(PublicAPI):
 
         return data if data is not None else []
 
-    @staticmethod
-    def _apply_unique_id_to_activity(entry):
-        if entry['type'] == 'match':
-            entry['unique_id'] = entry['details.order_id']
-            entry['unique_id_type'] = 'order_id'
-
-        if entry['type'] == 'transfer':
-            entry['unique_id'] = entry['details.transfer_id']
-            entry['unique_id_type'] = 'transfer_id'
-
-        return entry
-
-    def asset_activity(self, asset_symbol, start_date=None, end_date=None):
+    def account_history(self, symbol, start_date, end_date=None) -> GeneratorType:
         '''Get all activity related to a given asset'''
+        account_id = self.accounts(currency=symbol).id
+        endpoint = f'accounts/{account_id}/ledger'
+        end_date = datetime.now().isoformat() if end_date is None else end_date
 
-        asset_symbol = asset_symbol.upper()
-        account_id = [account['id'] for account in self.accounts if account['currency'] == asset_symbol][0]
-        activity = self.api.handle_page_nation(f"accounts/{account_id}/ledger", start_date=start_date, auth=self.auth)
-        no_activity = len(activity) == 0
-
-        if no_activity:
-            return activity
-
-        activity = map(self._apply_unique_id_to_activity, activity)
-
-        activity = [
-            {
-                **entry,
-                'created_at': entry['created_at'].strftime('%Y-%m-%d %H:%M:%S:%f'),
-                'symbol': asset_symbol,
-                'amount': str(entry['amount']),
-                'balance': str(entry['balance'])
-            }
-            for entry in activity
-        ]
-
-        return activity
+        return self.api.get_paginated_endpoint(
+            endpoint=endpoint,
+            auth=self.auth,
+            start_date=start_date
+        )
 
     def filled_orders(self, product_id=None):
         orders = self.api.get_paginated_endpoint(

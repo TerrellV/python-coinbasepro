@@ -76,9 +76,9 @@ class API:
         self,
         endpoint: str,
         start_date: str,
+        auth: Auth,
         date_field: str = 'created_at',
-        params: dict = {},
-        auth: Auth = None
+        params: dict = {}
     ):
         '''Get paginated endpoint. See documentation in handle_pagination
 
@@ -96,6 +96,6 @@ class API:
             start_date=start_date,
             date_field=date_field,
             params=params,
-            auth=None,
+            auth=auth,
             get_method=_http_get
         )
