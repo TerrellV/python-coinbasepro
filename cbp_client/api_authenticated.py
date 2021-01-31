@@ -88,11 +88,13 @@ class AuthAPI(PublicAPI):
         ]
 
     def market_buy(self, funds, product_id, delay=False):
-        '''Send order to api
+        '''Market buy as much crypto as specified funds allow
         Parameters
         ----------
         funds : str
-            The amount of fiat currency to purchase crypto with
+            The amount of fiat currency to purchase crypto with. Example, if
+            funds=50 and product_id=BTC-USD then you will purchase $50 worth of
+            crypto. Fees will be taken out of the specified funds amount.
         product_id : str
         delay : bool, Optional
         '''
@@ -117,7 +119,18 @@ class AuthAPI(PublicAPI):
         return r
 
     def market_sell(self, size, product_id, delay=False):
-        '''send order to api and handle errors'''
+        '''Market sell specified quantity of crypto.
+
+        Parameters
+        ----------
+        size : str
+            The quantity of the specified crypto to sell. Example, if
+            size=0.1 and product_id=BTC-USD then this will sell 0.1 btc for
+            USD. The amount of the quote currency you will receive depends on
+            current fees.
+        product_id : str
+        delay : bool, Optional
+        '''
 
         order_payload = {
             'side': 'sell',
