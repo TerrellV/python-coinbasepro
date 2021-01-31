@@ -4,59 +4,87 @@ import pathlib
 from decimal import Decimal
 
 
-from cbp_client import CBProAuthenticated
+from cbp_client import AuthAPI
 from cbp_client.api import API
+
+
+SANDBOX_URL = 'https://api-public.sandbox.pro.coinbase.com'
 
 
 @pytest.fixture
 def live_base_api():
-    return API('https://api.pro.coinbase.com/')
+    return API(sandbox_mode=False)
 
 
 @pytest.fixture
-def live_auth_api():
-    return CBProAuthenticated(
+def sandbox_auth_api():
+    return AuthAPI(
         json.loads(pathlib.Path('credentials.json').read_text())['sandbox'],
         sandbox_mode=True
     )
 
 
-def test_market_buy(live_auth_api):
+def test_market_buy(sandbox_auth_api):
 
+    assert sandbox_auth_api.api.base_url == SANDBOX_URL
     purchase_amount = 10
 
     coin_to_purchase = 'BTC'
 
-    starting_balance = sum(Decimal(a['balance']) for a in live_auth_api.accounts if a['currency'] == coin_to_purchase)
-    response = live_auth_api.market_buy(purchase_amount, f'{coin_to_purchase}-USD', delay=False).json()
-    live_auth_api.refresh_accounts()
-    ending_balance = sum(Decimal(a['balance']) for a in live_auth_api.accounts if a['currency'] == coin_to_purchase)
+    starting_balance = sum(
+        Decimal(a['balance'])
+        for a in sandbox_auth_api.accounts
+        if a['currency'] == coin_to_purchase
+    )
 
+    r = sandbox_auth_api.market_buy(
+        funds=purchase_amount,
+        product_id=f'{coin_to_purchase}-USD',
+        delay=False
+    ).json()
 
-    assert response['side'] == 'buy'
-    assert int(response['specified_funds']) == purchase_amount
-    assert response['type'] == 'market'
+    sandbox_auth_api.refresh_accounts()
+
+    ending_balance = sum(
+        Decimal(a['balance'])
+        for a in sandbox_auth_api.accounts
+        if a['currency'] == coin_to_purchase
+    )
+
+    assert r['side'] == 'buy'
+    assert int(r['specified_funds']) == purchase_amount
+    assert r['type'] == 'market'
     assert ending_balance > starting_balance
 
-    assert live_auth_api.cb_public.api.base_url == 'https://api-public.sandbox.pro.coinbase.com/'
-    assert live_auth_api.api.base_url == 'https://api-public.sandbox.pro.coinbase.com/'
 
+def test_market_sell(sandbox_auth_api):
 
-def test_market_sell(live_auth_api):
+    assert sandbox_auth_api.api.base_url == SANDBOX_URL
 
     sale_quantity = Decimal('0.01')
-
     coin_to_purchase = 'BTC'
 
-    starting_balance = sum(Decimal(a['balance']) for a in live_auth_api.accounts if a['currency'] == coin_to_purchase)
-    response = live_auth_api.market_sell(sale_quantity, f'{coin_to_purchase}-USD', delay=False).json()
-    live_auth_api.refresh_accounts()
-    ending_balance = sum(Decimal(a['balance']) for a in live_auth_api.accounts if a['currency'] == coin_to_purchase)
+    starting_balance = sum(
+        Decimal(a['balance'])
+        for a in sandbox_auth_api.accounts
+        if a['currency'] == coin_to_purchase
+    )
 
-    assert response['side'] == 'sell'
-    assert Decimal(response['size']) == sale_quantity
-    assert response['type'] == 'market'
+    r = sandbox_auth_api.market_sell(
+        size=sale_quantity,
+        product_id=f'{coin_to_purchase}-USD',
+        delay=False
+    ).json()
+
+    sandbox_auth_api.refresh_accounts()
+
+    ending_balance = sum(
+        Decimal(a['balance'])
+        for a in sandbox_auth_api.accounts
+        if a['currency'] == coin_to_purchase
+    )
+
+    assert r['side'] == 'sell'
+    assert Decimal(r['size']) == sale_quantity
+    assert r['type'] == 'market'
     assert ending_balance < starting_balance
-
-    assert live_auth_api.cb_public.api.base_url == 'https://api-public.sandbox.pro.coinbase.com/'
-    assert live_auth_api.api.base_url == 'https://api-public.sandbox.pro.coinbase.com/'

@@ -1,41 +1,39 @@
 import time
-import json
 
 from cbp_client.auth import Auth
 from cbp_client.api_public import PublicAPI
-from cbp_client.api import API
 
 
-class CBProAuthenticated():
+class AuthAPI(PublicAPI):
 
     def __init__(self, credentials, sandbox_mode=False):
+        super().__init__(sandbox_mode)
 
-        LIVE_URL = 'https://api.pro.coinbase.com/'
-        SANDBOX_URL = 'https://api-public.sandbox.pro.coinbase.com/'
-
-        base_url = SANDBOX_URL if sandbox_mode else LIVE_URL
-
-        self.public_api = PublicAPI(sandbox_mode=sandbox_mode)
-        self.api = API(base_url)
         self.auth = Auth(**credentials)
         self.accounts = self.api.get('accounts', auth=self.auth).json()
-
-    def __getattr__(self, name):
-        try:
-            return getattr(self.cb_public, name)
-        except AttributeError:
-            raise AttributeError(f'The authenticated and public api objects do not have attribute {name}.')
 
     def refresh_accounts(self):
         self.accounts = self.api.get('accounts', auth=self.auth).json()
 
-    def fill_history(self, product_id, order_id=None, start_date=None, end_date=None):
+    def fill_history(
+        self,
+        product_id: str,
+        order_id=None,
+        start_date=None,
+        end_date=None
+    ):
         '''Get all fills associated with a given product id'''
         end_point = 'fills'
         params = {'product_id': product_id.upper()}
-        data = self.api.handle_page_nation(end_point, params=params, start_date=start_date, auth=self.auth)
-        returned_value = data.copy().to_dict(orient='records')
-        return returned_value if data is not None else None
+        data = self.api.get_paginated_endpoint(
+            end_point,
+            params=params,
+            start_date=start_date,
+            date_field='created_at',
+            auth=self.auth
+        )
+
+        return data if data is not None else []
 
     @staticmethod
     def _apply_unique_id_to_activity(entry):
@@ -75,21 +73,29 @@ class CBProAuthenticated():
 
         return activity
 
-    def completed_orders(self, product_id=None):
-        orders = self.api.handle_page_nation(
-            'orders',
+    def filled_orders(self, product_id=None):
+        orders = self.api.get_paginated_endpoint(
+            endpoint='orders',
             date_field='done_at',
             start_date='2019-01-01',
             auth=self.auth,
-            params={'status':'done'}
+            params={'status': 'done'}
         )
 
-        orders = list(filter(lambda order: order['done_reason'] == 'filled', orders))
-
-        return orders
+        return [
+            o for o in orders
+            if o.get('done_reason', '').lower() == 'filled'
+        ]
 
     def market_buy(self, funds, product_id, delay=False):
-        '''send order to api and handle errors'''
+        '''Send order to api
+        Parameters
+        ----------
+        funds : str
+            The amount of fiat currency to purchase crypto with
+        product_id : str
+        delay : bool, Optional
+        '''
 
         order_payload = {
             'side': 'buy',
@@ -98,7 +104,12 @@ class CBProAuthenticated():
             'funds': str(funds),
         }
 
-        r = self.api.post('orders', params={}, data=order_payload, auth=self.auth)
+        r = self.api.post(
+            endpoint='orders',
+            params={},
+            data=order_payload,
+            auth=self.auth
+        )
 
         if delay:
             time.sleep(0.4)
@@ -115,29 +126,14 @@ class CBProAuthenticated():
             'size': str(size),
         }
 
-        r = self.api.post('orders', params={}, data=order_payload, auth=self.auth)
+        r = self.api.post(
+            endpoint='orders',
+            params={},
+            data=order_payload,
+            auth=self.auth
+        )
 
         if delay:
             time.sleep(0.4)
 
         return r
-
-if __name__ == '__main__':
-    with open('credentials.json') as f:
-        credentials = json.loads(f.read())
-        auth_api = CBProAuthenticated(credentials)
-
-    orders = auth_api.completed_orders()
-
-    print(json.dumps(orders, indent=4))
-
-    # print(auth_api.api.get())
-
-
-    # asset_activity = auth_api.asset_activity(
-    #     asset_symbol='BTC',
-    #     start_date='2019-01-01',
-    #     end_date='2020-01-01'
-    # )
-
-    # print(json.dumps(asset_activity, indent=4))

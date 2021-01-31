@@ -5,7 +5,7 @@ import re
 import inspect
 
 import requests
-
+from cbp_client.auth import Auth
 from cbp_client.pagination import handle_pagination
 
 
@@ -74,12 +74,23 @@ class API:
 
     def get_paginated_endpoint(
         self,
-        endpoint,
-        start_date,
-        date_field='created_at',
-        params={},
-        auth=None
+        endpoint: str,
+        start_date: str,
+        date_field: str = 'created_at',
+        params: dict = {},
+        auth: Auth = None
     ):
+        '''Get paginated endpoint. See documentation in handle_pagination
+
+        Parameters
+        ----------
+        endpoint : str
+            The API endpoint of interest. Example 'products'
+        start_date : str
+        date_field : str
+        params: dict
+        auth: Auth
+        '''
         return handle_pagination(
             url=self._build_url(endpoint),
             start_date=start_date,
