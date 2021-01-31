@@ -2,6 +2,16 @@ import time
 
 from cbp_client.auth import Auth
 from cbp_client.api_public import PublicAPI
+from collections import namedtuple
+
+
+Account = namedtuple('Account', ['id',
+                                 'currency',
+                                 'balance',
+                                 'available',
+                                 'hold',
+                                 'profile_id',
+                                 'trading_enabled'])
 
 
 class AuthAPI(PublicAPI):
@@ -10,10 +20,22 @@ class AuthAPI(PublicAPI):
         super().__init__(sandbox_mode)
 
         self.auth = Auth(**credentials)
-        self.accounts = self.api.get('accounts', auth=self.auth).json()
+        self.accounts = []
+        self.refresh_accounts()
+
+    def balance(self, symbol: str) -> str:
+        '''Returns balance for specific currency in coinbase pro'''
+        symbol = symbol.lower()
+
+        for acct in self.accounts:
+            if acct.currency.lower() == symbol:
+                return acct.balance
 
     def refresh_accounts(self):
-        self.accounts = self.api.get('accounts', auth=self.auth).json()
+        self.accounts = [
+            Account(**act)
+            for act in self.api.get('accounts', auth=self.auth).json()
+        ]
 
     def fill_history(
         self,
