@@ -156,10 +156,6 @@ class PublicAPI(API):
             api=self.api
         )()
 
-    def _usd_trading_pairs(self):
-        """Return USD trading pairs"""
-        return [p for p in self.trading_pairs if p.quote == 'USD']
-
     def products(self, **keyword_args) -> List[Product]:
         """
         Filters for a list of products. Default return all.
