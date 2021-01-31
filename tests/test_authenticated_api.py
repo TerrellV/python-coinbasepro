@@ -140,3 +140,28 @@ def test_account_history(sandbox_auth_api):
 
     for i in range(3):
         next(hist)
+
+
+def test_orders(sandbox_auth_api):
+    ten_days_prior = (datetime.now() - timedelta(days=10)).isoformat()
+
+    all_orders = sandbox_auth_api.orders(
+        start_date=ten_days_prior
+    )
+    settled_orders = sandbox_auth_api.orders(
+        start_date=ten_days_prior,
+        settled=True
+    )
+    done_orders = sandbox_auth_api.orders(
+        start_date=ten_days_prior,
+        status='done'
+    )
+
+    assert len(list(all_orders)) > 0
+    assert all(o['settled'] for o in settled_orders)
+    assert all(o['status'] == 'done' for o in done_orders)
+
+    assert all(o['created_at'] >= ten_days_prior for o in all_orders)
+    assert all(o['created_at'] >= ten_days_prior for o in done_orders)
+    assert all(o['created_at'] >= ten_days_prior for o in settled_orders)
+

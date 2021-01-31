@@ -45,25 +45,55 @@ class AuthAPI(PublicAPI):
             for act in self.api.get('accounts', auth=self.auth).json()
         ]
 
-    def fill_history(
+    def orders(
         self,
-        product_id: str,
-        order_id=None,
-        start_date=None,
-        end_date=None
+        start_date: str,
+        end_date: str = None,
+        status: str = None,
+        settled: bool = None
     ):
-        '''Get all fills associated with a given product id'''
-        end_point = 'fills'
-        params = {'product_id': product_id.upper()}
-        data = self.api.get_paginated_endpoint(
-            end_point,
-            params=params,
-            start_date=start_date,
-            date_field='created_at',
-            auth=self.auth
-        )
+        '''Get orders related to the authenticated account.
 
-        return data if data is not None else []
+        Parameters
+        ----------
+        start_date: str
+            The beginning of the period to retrieve orders from
+        end_Date: str
+            The end of the period to retrieve orders from. Defaults to now.
+        status: str, optional
+            When specified, this will filter the list of orders to only those
+            with this status.
+        settled: bool, optional
+            If true, returns only orders where: order['settled']=True
+        '''
+        end_date = datetime.now().isoformat() if end_date is None else end_date
+
+        no_filters = status is None and settled is None
+        status_specified = status is not None
+
+        def _get_orders(params, date_field='created_at'):
+            orders = self.api.get_paginated_endpoint(
+                endpoint='orders',
+                auth=self.auth,
+                start_date=start_date,
+                params=params
+            )
+            return [
+                o for o in orders
+                if o[date_field] >= start_date <= end_date
+            ]
+
+        if no_filters:
+            orders = _get_orders({'status': 'all'})
+
+        elif settled:
+            orders = _get_orders({'status': 'done'})
+            orders = [o for o in orders if o['settled']]
+
+        elif status_specified:
+            orders = _get_orders({'status': status})
+
+        return orders
 
     def account_history(self, symbol, start_date, end_date=None) -> GeneratorType:
         '''Get all activity related to a given asset'''

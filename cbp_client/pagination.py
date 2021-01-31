@@ -54,5 +54,5 @@ def handle_pagination(
         earliest_date = min(row[date_field] for row in page)
         earliest_date = datetime.strptime(earliest_date, COINBASE_DATE_FORMAT)
 
-        if earliest_date < start_date:
+        if earliest_date <= start_date:
             break
