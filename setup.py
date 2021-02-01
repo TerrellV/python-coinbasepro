@@ -1,7 +1,7 @@
 import setuptools, runpy
 
 
-version_meta = runpy.run_path('version.py') 
+version_meta = runpy.run_path('version.py')
 version = version_meta['__version__']
 
 
@@ -21,7 +21,6 @@ setuptools.setup(
     url="https://github.com/TerrellV/python-coinbasepro",
     packages=setuptools.find_packages(exclude=['tests']),
     install_requires=[
-        'pandas>=1',
         'requests>=2'
     ],
     classifiers=[
