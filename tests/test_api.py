@@ -18,7 +18,7 @@ def live_base_api():
 
 @pytest.fixture
 def sandbox_base_api():
-    return API(sandbox_mode=False)
+    return API(sandbox_mode=True)
 
 
 @pytest.fixture

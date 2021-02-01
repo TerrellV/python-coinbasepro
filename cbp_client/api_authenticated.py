@@ -95,7 +95,12 @@ class AuthAPI(PublicAPI):
 
         return orders
 
-    def account_history(self, symbol, start_date, end_date=None) -> GeneratorType:
+    def account_history(
+        self,
+        symbol: str,
+        start_date: str,
+        end_date=None
+    ) -> GeneratorType:
         '''Get all activity related to a given asset'''
         account_id = self.accounts(currency=symbol).id
         endpoint = f'accounts/{account_id}/ledger'

@@ -178,7 +178,9 @@ def test_payment_methods(sandbox_auth_api):
 def test_deposit(sandbox_auth_api):
     amount = 10
     currency = 'USD'
-    payment_method = sandbox_auth_api.payment_methods(name='TD Bank ******2778')
+    payment_method = (
+        sandbox_auth_api.payment_methods(name='TD Bank ******2778')
+    )
     r = sandbox_auth_api.deposit(
         amount=amount,
         currency=currency,

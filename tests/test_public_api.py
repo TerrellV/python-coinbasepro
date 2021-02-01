@@ -1,6 +1,5 @@
 from decimal import Decimal
 from datetime import datetime
-from collections import namedtuple
 import types
 
 import pytest
@@ -53,7 +52,8 @@ def test_exchange_time(live_public_api):
     ]
 )
 def test_products(live_public_api, expected_products, kwargs):
-    # FakeProduct = namedtuple('FakeProduct', 'uid, id, fully_tradeable, live, quote, base')
+    # FakeProduct = (
+    # namedtuple('FakeProduct', 'uid, id, fully_tradeable, live, quote, base'))
 
     # live_public_api._products = [
     #     FakeProduct(**{
@@ -101,4 +101,3 @@ def test_price(live_public_api):
 
     assert type(price) == str
     assert type(Decimal(price)) == Decimal
-    assert price == requests.get(f'https://api.pro.coinbase.com/products/{symbol}-USD/ticker').json()['price']
