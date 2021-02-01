@@ -165,3 +165,27 @@ def test_orders(sandbox_auth_api):
     assert all(o['created_at'] >= ten_days_prior for o in done_orders)
     assert all(o['created_at'] >= ten_days_prior for o in settled_orders)
 
+
+def test_payment_methods(sandbox_auth_api):
+
+    all_methods = sandbox_auth_api.payment_methods()
+    usd_wallet = sandbox_auth_api.payment_methods(name='USD Wallet')
+
+    assert len(all_methods) > 1
+    assert usd_wallet['name'].lower() == 'usd wallet'
+
+
+def test_deposit(sandbox_auth_api):
+    amount = 10
+    currency = 'USD'
+    payment_method = sandbox_auth_api.payment_methods(name='TD Bank ******2778')
+    r = sandbox_auth_api.deposit(
+        amount=amount,
+        currency=currency,
+        payment_method_id=payment_method['id']
+    )
+    data = r.json()
+
+    assert r.status_code == 200
+    assert float(data['amount']) == float(amount)
+    assert data['currency'] == currency

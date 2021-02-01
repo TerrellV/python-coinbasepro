@@ -107,20 +107,6 @@ class AuthAPI(PublicAPI):
             start_date=start_date
         )
 
-    def filled_orders(self, product_id=None):
-        orders = self.api.get_paginated_endpoint(
-            endpoint='orders',
-            date_field='done_at',
-            start_date='2019-01-01',
-            auth=self.auth,
-            params={'status': 'done'}
-        )
-
-        return [
-            o for o in orders
-            if o.get('done_reason', '').lower() == 'filled'
-        ]
-
     def market_buy(self, funds, product_id, delay=False):
         '''Market buy as much crypto as specified funds allow
         Parameters
@@ -184,3 +170,33 @@ class AuthAPI(PublicAPI):
             time.sleep(0.4)
 
         return r
+
+    def payment_methods(self, name: str = None):
+        '''Get list of payment methods'''
+        payment_methods = self.api.get(
+            endpoint='payment-methods',
+            auth=self.auth
+        ).json()
+
+        if name is None:
+            return payment_methods
+
+        for method in payment_methods:
+            if method['name'].lower() == name.lower():
+                return method
+
+    def deposit(
+        self,
+        amount: str,
+        payment_method_id: str,
+        currency: str = 'USD'
+    ):
+        return self.api.post(
+            endpoint='deposits/payment-method',
+            auth=self.auth,
+            data={
+                'amount': amount,
+                'currency': currency,
+                'payment_method_id': payment_method_id
+            }
+        )
