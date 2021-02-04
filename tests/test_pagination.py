@@ -9,7 +9,7 @@ import json
 def test_pagination():
     now = datetime.now()
     thirty_days_ago = now - timedelta(days=30)
-    creds = json.loads(pathlib.Path('credentials.json').read_text())
+    creds = json.loads(pathlib.Path('credentials.json').read_text())['live']
 
     data = handle_pagination(
         start_date=thirty_days_ago.isoformat(),

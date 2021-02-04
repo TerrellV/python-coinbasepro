@@ -207,10 +207,18 @@ class PublicAPI(API):
 
         def _should_include(product, keyword_args):
             """Check if attributes with provided values exists on product"""
-            return all(
-                getattr(product, keyword.lower(), not value) == value.upper()
-                for keyword, value in keyword_args.items()
-            )
+            for keyword, value in keyword_args.items():
+                keyword = keyword.lower()
+                attribute_value = getattr(product, keyword, not value)
+
+                try:
+                    if str(attribute_value).upper() != str(value).upper():
+                        return False
+                except AttributeError:
+                    if attribute_value != value:
+                        return False
+
+            return True
 
         return [product
                 for product in self._products
