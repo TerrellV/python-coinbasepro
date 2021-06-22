@@ -20,6 +20,7 @@ Product = namedtuple(
         'limit_only',
         'post_only',
         'trading_disabled',
+        'fx_stablecoin',
         'live',
         'fully_tradeable'
     ]

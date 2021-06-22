@@ -9,12 +9,12 @@ import json
 def test_pagination():
     now = datetime.now()
     thirty_days_ago = now - timedelta(days=30)
-    creds = json.loads(pathlib.Path('credentials.json').read_text())['live']
+    creds = json.loads(pathlib.Path('credentials.json').read_text())['sandbox']
 
     data = handle_pagination(
         start_date=thirty_days_ago.isoformat(),
         date_field='created_at',
-        url='https://api.pro.coinbase.com/orders',
+        url='https://api-public.sandbox.pro.coinbase.com/orders',
         params={'status': 'all'},
         get_method=_http_get,
         auth=Auth(creds['api_key'], creds['secret'], creds['passphrase'])

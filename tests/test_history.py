@@ -15,7 +15,13 @@ def live_base_api():
 
 
 def test_history(live_base_api):
-    hist = History('btc-usd', '2020-01-29', '2020-02-01', 'five_minute', live_base_api)
+    hist = History(
+        product_id='btc-usd',
+        start='2020-01-29',
+        end='2020-02-01',
+        interval='five_minute',
+        api=live_base_api
+    )
     candles = hist()
 
     first_candle = next(candles)
@@ -24,7 +30,13 @@ def test_history(live_base_api):
     assert isinstance(first_candle, History.Candle)
 
     with pytest.raises(KeyError):
-        hist = History('eth-usd', '2020-01-01', '2020-01-03', 'hours', live_base_api)
+        hist = History(
+            product_id='eth-usd',
+            start='2020-01-01',
+            end='2020-01-03',
+            interval='hours',
+            api=live_base_api
+        )
         hist()
 
 
