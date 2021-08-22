@@ -13,6 +13,16 @@ from typing import Generator
 from collections import namedtuple
 
 from cbp_client.api import API
+from enum import Enum
+
+
+class Interval(Enum):
+    ONE_MINUTE = 60
+    FIVE_MINUTES = 300
+    FIFTEEN_MINUTES = 900
+    HOURLY = 3_600
+    SIX_HOURS = 21_600
+    DAILY = 86_400
 
 
 class History:
@@ -25,9 +35,9 @@ class History:
         An identifier used by the exchange to represent a trading pair.
         Example: 'btc-usd'
     start : str
-        The earliest date in the desired timeline. ISO Format YYYY-MM-DD
+        The earliest date in the desired timeline. Inclusive. ISO Format YYYY-MM-DD
     end : str, Optional
-        The most recent date in the desired timeline. ISO Format YYYY-MM-DD.
+        The most recent date in the desired timeline. Inclusive. ISO Format YYYY-MM-DD.
         Default=Today
     interval : str, Optional
         The size of each 'candle' returned.
@@ -35,20 +45,9 @@ class History:
         'six_hours', 'twenty_four_hours'. Default='twenty_four_hours'
     quiet : bool, 'Optional
     """
-    ONE_MINUTE = 60
     MAX_CANDLES_IN_REQUEST = 300
-    INTERVALS = {
-        'minute': ONE_MINUTE,
-        'five_minute': ONE_MINUTE * 5,
-        'fifteen_minute': ONE_MINUTE * 15,
-        'hourly': ONE_MINUTE * 60,
-        'six_hour': ONE_MINUTE * 60 * 6,
-        'daily': ONE_MINUTE * 60 * 24
-    }
 
-    Candle = namedtuple(
-        'Candle',
-        ['start', 'open', 'high', 'low', 'close', 'volume'])
+    Candle = namedtuple('Candle', ['start', 'open', 'high', 'low', 'close', 'volume'])
 
     def __init__(
         self,
@@ -56,12 +55,12 @@ class History:
         start: str,
         end: str,
         api: API,
-        interval: str,
+        interval: str = Interval.DAILY.name,
         quiet: bool = True
     ):
 
         try:
-            self.candle_length = History.INTERVALS[interval]
+            self.candle_length = Interval[interval].value
         except KeyError as e:
             self._handle_interval_error(e, interval)
 
@@ -167,7 +166,7 @@ class History:
     def _handle_interval_error(e, interval):
         error_message = f"""\
         "{interval}" is an invalid interval.
-        Choose from: {list(History.INTERVALS.keys())}
+        Choose from: {Interval.__members__.keys()}
         """
         raise KeyError(dedent(error_message)).with_traceback(e.__traceback__)
 

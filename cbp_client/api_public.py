@@ -6,7 +6,7 @@ from typing import List
 
 from cbp_client.product import Product, is_fully_tradeable, is_live
 from cbp_client.api import API
-from cbp_client.history import History
+from cbp_client.history import History, Interval
 
 
 class PublicAPI(API):
@@ -115,7 +115,7 @@ class PublicAPI(API):
             product_id: str,
             start=None,
             end=None,
-            candle_interval='daily') -> List[History.Candle]:
+            candle_interval: str = Interval.DAILY.name) -> List[History.Candle]:
         """
         Get historical data for a specifc product / trading pair.
 
