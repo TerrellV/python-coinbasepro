@@ -1,30 +1,9 @@
-from collections import namedtuple
 
-Product = namedtuple(
-    'Product',
-    [
-        'id',
-        'display_name',
-        'base_currency',
-        'quote_currency',
-        'base_increment',
-        'quote_increment',
-        'base_min_size',
-        'base_max_size',
-        'min_market_funds',
-        'max_market_funds',
-        'status',
-        'status_message',
-        'margin_enabled',
-        'cancel_only',
-        'limit_only',
-        'post_only',
-        'trading_disabled',
-        'fx_stablecoin',
-        'live',
-        'fully_tradeable'
-    ]
-)
+
+class Product:
+    def __init__(self, **kwargs):
+        for arg_name, arg_value in kwargs.items():
+            setattr(self, arg_name, arg_value)
 
 
 def is_fully_tradeable(product: dict):
