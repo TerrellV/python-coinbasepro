@@ -8,9 +8,9 @@ jobs:
     environment: dev
     runs-on: ubuntu-20.04
     env:
-      sandbox_key: ${{ secrets.COINBASE_PRO_KEY }}
-      sandbox_passphrase: ${{ secrets.COINBASE_PRO_PASSPHRASE }}
-      sandbox_secret: ${{ secrets.COINBASE_PRO_SECRET }}
+      sandbox_api_key: ${{ secrets.COINBASE_PRO_KEY }}
+      sandbox_api_passphrase: ${{ secrets.COINBASE_PRO_PASSPHRASE }}
+      sandbox_api_secret: ${{ secrets.COINBASE_PRO_SECRET }}
     steps:
     - uses: actions/checkout@v2
     - name: Setup Python
@@ -25,4 +25,4 @@ jobs:
       run: |
         python -m pytest
 
-  
+
