@@ -59,4 +59,4 @@ def handle_pagination(
             break
 
         print('waiting')
-        time.sleep(0.34)
+        time.sleep(0.1)

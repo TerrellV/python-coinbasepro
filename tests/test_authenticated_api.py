@@ -20,16 +20,7 @@ def live_base_api():
 
 @pytest.fixture
 def sandbox_auth_api():
-
-    credentials = (
-        None if os.getenv('sandbox_api_key') is not None
-        else json.loads(pathlib.Path('credentials.json').read_text())['sandbox']
-    )
-
-    return AuthAPI(
-        credentials=credentials,
-        sandbox_mode=True
-    )
+    return AuthAPI(sandbox_mode=True)
 
 
 def test_market_buy(sandbox_auth_api):

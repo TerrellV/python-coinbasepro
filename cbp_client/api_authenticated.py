@@ -1,9 +1,9 @@
 import time
 from datetime import datetime
-import os
 from typing import Union, List
 from types import GeneratorType
 from collections import namedtuple
+from cbp_client.helpers import load_credentials
 
 from cbp_client.auth import Auth
 from cbp_client.api_public import PublicAPI
@@ -23,20 +23,7 @@ class AuthAPI(PublicAPI):
         super().__init__(sandbox_mode)
 
         if credentials is None:
-            env_variable_prefix = 'sandbox_' if sandbox_mode else ''
-            try:
-                credentials = {
-                    'api_key': os.environ[f'{env_variable_prefix}api_key'],
-                    'passphrase': os.environ[f'{env_variable_prefix}api_passphrase'],
-                    'secret': os.environ[f'{env_variable_prefix}api_secret']
-                }
-            except KeyError:
-                raise Exception('Either pass your credentials explicitly '
-                                'or set them as environment variables.\n'
-                                f'\t{env_variable_prefix}api_key=[api_key]\n'
-                                f'\t{env_variable_prefix}api_passphrase=[api_passphrase]\n'
-                                f'\t{env_variable_prefix}api_secret=[api_secret]'
-                                )
+            credentials = load_credentials(sandbox_mode)
 
         self.auth = Auth(**credentials)
         self._accounts = []
