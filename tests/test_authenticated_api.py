@@ -20,22 +20,9 @@ def live_base_api():
 @pytest.fixture
 def sandbox_auth_api():
     return AuthAPI(
-        json.loads(pathlib.Path('credentials.json').read_text())['sandbox'],
+        # credentials=json.loads(pathlib.Path('credentials.json').read_text())['sandbox'],
+        credentials=None,
         sandbox_mode=True
-    )
-
-
-@pytest.fixture
-def live_auth_api():
-    creds = json.loads(pathlib.Path('credentials.json').read_text())
-
-    return AuthAPI(
-        credentials={
-            'api_key': creds['api_key'],
-            'secret': creds['secret'],
-            'passphrase': creds['passphrase']
-        },
-        sandbox_mode=False
     )
 
 
