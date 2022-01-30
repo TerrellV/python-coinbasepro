@@ -24,9 +24,11 @@ def sandbox_base_api():
 @pytest.fixture
 def sandbox_creds():
     def func():
-        return (
-            json.loads(pathlib.Path('credentials.json').read_text())['sandbox']
-        )
+        try:
+            return json.loads(pathlib.Path('credentials.json').read_text())['sandbox']
+        except FileNotFoundError:
+            return None
+
     return func
 
 
