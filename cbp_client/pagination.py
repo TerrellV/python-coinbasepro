@@ -1,6 +1,7 @@
 '''Class for handling paginated endpoints'''
 from datetime import datetime
 from cbp_client.auth import Auth
+import time
 
 
 COINBASE_DATE_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
@@ -56,3 +57,5 @@ def handle_pagination(
 
         if earliest_date <= start_date:
             break
+
+        time.sleep(0.1)

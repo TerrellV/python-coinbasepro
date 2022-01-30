@@ -4,6 +4,7 @@ import pathlib
 from decimal import Decimal
 from datetime import datetime, timedelta
 import types
+import os
 
 from cbp_client import AuthAPI
 from cbp_client.api import API
@@ -19,9 +20,14 @@ def live_base_api():
 
 @pytest.fixture
 def sandbox_auth_api():
+
+    credentials = (
+        None if os.getenv('sandbox_api_key') is not None
+        else json.loads(pathlib.Path('credentials.json').read_text())['sandbox']
+    )
+
     return AuthAPI(
-        # credentials=json.loads(pathlib.Path('credentials.json').read_text())['sandbox'],
-        credentials=None,
+        credentials=credentials,
         sandbox_mode=True
     )
 
