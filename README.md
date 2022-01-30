@@ -99,7 +99,7 @@ To retrieve only /USD trading pairs, set quote_currency='USD'. To retrieve only 
 
 ## Authenticated API
 
-The Authenticated API client provides access to account level details AND all `PublicAPI` methods referenced above. In order to use the live authenticated api, you will need to pass a dictionary with a secret, passphrase, and api_key. One way to do this, is to store your credentials in a seperate file that **IS NOT** included in your git history. You can then load this file and your credentials, when you are ready to access the api. See example below.
+The Authenticated API client provides access to account level details AND all `PublicAPI` methods referenced above. In order to use the live authenticated api, you must provide credentials through one of the following methods: pass a credentials dictionary to the AuthAPI class or set environment variables as shown below.
 
 ```python
 from cbp_client import AuthAPI
@@ -109,10 +109,8 @@ import json
 creds = json.loads(Path('credentials.json').read_text())['live']
 api = AuthAPI(creds)
 ```
-
 ```json
-# credentials.json
-
+# credentials.json file loaded in python example above
 {
     "live": {
         "secret": "replace_this_with_secret",
@@ -126,7 +124,26 @@ api = AuthAPI(creds)
     }
 }
 ```
-
+### Setting Credentials Using Environment Variables
+windows cmd.exe example
+```shell
+set api_key=INSERT_YOUR_INFO
+set api_passphrase=INSERT_YOUR_INFO
+set api_secret=INSERT_YOUR_INFO
+```
+bash example
+```bash
+export api_key=INSERT_YOUR_INFO
+export api_passphrase=INSERT_YOUR_INFO
+export api_secret=INSERT_YOUR_INFO
+```
+Sandbox credential example.
+If you are setting environment variables for your sandbox environment, prefix the variables names with "sandbox_" as shown.
+```shell
+set sandbox_api_key=INSERT_YOUR_INFO
+set sandbox_api_passphrase=INSERT_YOUR_INFO
+set sandbox_api_secret=INSERT_YOUR_INFO
+```
 > **Warning**:
 >1. Never store your api credentials directly in your code
 >2. Never commit your credentials.json file to a git repository
