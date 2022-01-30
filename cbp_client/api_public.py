@@ -15,8 +15,8 @@ class PublicAPI(API):
 
     Example
     -------
-    >>>cb = PublicClient()
-    >>>cb.usd_price('btc')
+    >>>cb = PublicAPI()
+    >>>cb.price('btc')
     '10,000'
 
     Arguments
