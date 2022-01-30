@@ -40,7 +40,7 @@ def test_api_post(sandbox_base_api, sandbox_creds):
     auth = Auth(**sandbox_creds())
     r = sandbox_base_api.post('orders', data=data, auth=auth)
 
-    assert r.url == 'https://api-public.sandbox.pro.coinbase.com/orders'
+    assert r.url == 'https://api-public.sandbox.exchange.coinbase.com/orders'
     assert r.status_code == 200
     time.sleep(random.uniform(0.3, 0.4))
 
@@ -48,7 +48,7 @@ def test_api_post(sandbox_base_api, sandbox_creds):
 def test_api_get(live_base_api):
     r = live_base_api.get('/products')
 
-    assert r.url == 'https://api.pro.coinbase.com/products'
+    assert r.url == 'https://api.exchange.coinbase.com/products'
     assert r.status_code == 200
     time.sleep(random.uniform(0.3, 0.4))
 

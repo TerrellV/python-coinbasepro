@@ -9,7 +9,7 @@ from cbp_client import AuthAPI
 from cbp_client.api import API
 
 
-SANDBOX_URL = 'https://api-public.sandbox.pro.coinbase.com'
+SANDBOX_URL = 'https://api-public.sandbox.exchange.coinbase.com'
 
 
 @pytest.fixture

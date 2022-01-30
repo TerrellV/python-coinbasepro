@@ -49,8 +49,8 @@ def _http_get(url, params={}, auth=None):
 
 class API:
 
-    LIVE_URL = 'https://api.pro.coinbase.com'
-    SANDBOX_URL = 'https://api-public.sandbox.pro.coinbase.com'
+    LIVE_URL = 'https://api.exchange.coinbase.com'
+    SANDBOX_URL = 'https://api-public.sandbox.exchange.coinbase.com'
 
     def __init__(self, sandbox_mode: bool):
         self.base_url = API.LIVE_URL if not sandbox_mode else self.SANDBOX_URL
