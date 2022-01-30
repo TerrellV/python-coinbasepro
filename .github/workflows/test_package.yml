@@ -1,10 +1,10 @@
-name: Upload Python Package
+name: Test Python Package
 
 on:
   push:
 
 jobs:
-  deploy:
+  test:
     environment: dev
     runs-on: ubuntu-20.04
     env:
