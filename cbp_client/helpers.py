@@ -7,9 +7,10 @@ def load_credentials(sandbox_mode):
     env_variable_prefix = 'sandbox_' if sandbox_mode else ''
     current_working_directory = Path().cwd()
     creds_file_path = current_working_directory / 'credentials.json'
+    creds_json_key = 'sandbox' if sandbox_mode else 'live'
 
     try:
-        return json.loads(creds_file_path.read_text())['sandbox']
+        return json.loads(creds_file_path.read_text())[creds_json_key]
     except FileNotFoundError:
         try:
             return {
