@@ -10,9 +10,9 @@ jobs:
       sandbox_api_key: ${{ secrets.COINBASE_PRO_KEY }}
       sandbox_api_passphrase: ${{ secrets.COINBASE_PRO_PASSPHRASE }}
       sandbox_api_secret: ${{ secrets.COINBASE_PRO_SECRET }}
-      TWEEN_PASSWORD: ${{ secrets.TWEEN_PASSWORD }}
-      TWEEN_REPOSITORY: ${{ secrets.TWEEN_REPOSITORY }}
-      TWEEN_USERNAME: ${{ secrets.TWEEN_USERNAME }}
+      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
+      TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
     steps:
     - uses: actions/checkout@v2
       with:
