@@ -3,17 +3,18 @@ name: Build & Publish to Test PyPi
 on:
   push:
 
+env:
+  sandbox_api_key: ${{ secrets.COINBASE_PRO_KEY }}
+  sandbox_api_passphrase: ${{ secrets.COINBASE_PRO_PASSPHRASE }}
+  sandbox_api_secret: ${{ secrets.COINBASE_PRO_SECRET }}
+  TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+  TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+  TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
+
 jobs:
-  test:
+  build:
     environment: dev
     runs-on: ubuntu-20.04
-    env:
-      sandbox_api_key: ${{ secrets.COINBASE_PRO_KEY }}
-      sandbox_api_passphrase: ${{ secrets.COINBASE_PRO_PASSPHRASE }}
-      sandbox_api_secret: ${{ secrets.COINBASE_PRO_SECRET }}
-      TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
-      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-      TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
     steps:
       - uses: actions/checkout@v2
         - fetch-depth: 0
