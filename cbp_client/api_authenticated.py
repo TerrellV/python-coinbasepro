@@ -1,12 +1,12 @@
 import time
+from datetime import datetime
+from typing import Union, List
+from types import GeneratorType
+from collections import namedtuple
+from cbp_client.helpers import load_credentials
 
 from cbp_client.auth import Auth
 from cbp_client.api_public import PublicAPI
-from collections import namedtuple
-from typing import Union, List
-from datetime import datetime
-from types import GeneratorType
-
 
 Account = namedtuple('Account', ['id',
                                  'currency',
@@ -19,8 +19,11 @@ Account = namedtuple('Account', ['id',
 
 class AuthAPI(PublicAPI):
 
-    def __init__(self, credentials, sandbox_mode=False):
+    def __init__(self, credentials=None, sandbox_mode=False):
         super().__init__(sandbox_mode)
+
+        if credentials is None:
+            credentials = load_credentials(sandbox_mode)
 
         self.auth = Auth(**credentials)
         self._accounts = []

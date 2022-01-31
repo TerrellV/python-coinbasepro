@@ -12,3 +12,4 @@ creds.json
 credentials.json
 notes.md
 .pypirc
+.env

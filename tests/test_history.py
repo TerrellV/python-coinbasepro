@@ -1,10 +1,9 @@
-import pytest
-
-from datetime import datetime, timedelta
 import types
 from cbp_client.api import API
 from cbp_client.history import History
+import pytest
 import pandas as pd
+
 
 @pytest.fixture
 def live_base_api():

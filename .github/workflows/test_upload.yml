@@ -1,0 +1,29 @@
+name: Build & Upload to Test PyPi
+on: workflow_dispatch
+jobs:
+  build:
+    name: Build and Upload
+    environment: dev
+    runs-on: ubuntu-20.04
+    env:
+      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
+      TWINE_REPOSITORY_URL: ${{ secrets.TWINE_REPOSITORY_URL }}
+      TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.7"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade build
+        python -m pip install setuptools wheel twine
+    - name: Build to Dist
+      run: |
+        python -m build
+        python -m twine upload --non-interactive --repository ${{ secrets.TWINE_REPOSITORY }} dist/*

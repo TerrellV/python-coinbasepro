@@ -1,0 +1,31 @@
+name: Run Test Suite
+
+on:
+  push:
+jobs:
+  test:
+    name: Run Tests
+    environment: dev
+    runs-on: ubuntu-20.04
+    env:
+      sandbox_api_key: ${{ secrets.COINBASE_PRO_KEY }}
+      sandbox_api_passphrase: ${{ secrets.COINBASE_PRO_PASSPHRASE }}
+      sandbox_api_secret: ${{ secrets.COINBASE_PRO_SECRET }}
+      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
+      TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: "3.7"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest requests pandas
+    - name: Run tests
+      run: |
+        python -m pytest -v -s

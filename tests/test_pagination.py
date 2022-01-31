@@ -1,15 +1,14 @@
-import pytest
+from datetime import datetime, timedelta
 from cbp_client.pagination import handle_pagination
 from cbp_client.auth import Auth
-from datetime import datetime, timedelta
 from cbp_client.api import _http_get
-import pathlib
-import json
+from cbp_client.helpers import load_credentials
+
 
 def test_pagination():
     now = datetime.now()
     thirty_days_ago = now - timedelta(days=30)
-    creds = json.loads(pathlib.Path('credentials.json').read_text())['sandbox']
+    creds = load_credentials(sandbox_mode=True)
 
     data = handle_pagination(
         start_date=thirty_days_ago.isoformat(),

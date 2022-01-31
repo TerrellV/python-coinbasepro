@@ -1,6 +1,4 @@
 import pytest
-import json
-import pathlib
 from decimal import Decimal
 from datetime import datetime, timedelta
 import types
@@ -19,24 +17,7 @@ def live_base_api():
 
 @pytest.fixture
 def sandbox_auth_api():
-    return AuthAPI(
-        json.loads(pathlib.Path('credentials.json').read_text())['sandbox'],
-        sandbox_mode=True
-    )
-
-
-@pytest.fixture
-def live_auth_api():
-    creds = json.loads(pathlib.Path('credentials.json').read_text())
-
-    return AuthAPI(
-        credentials={
-            'api_key': creds['api_key'],
-            'secret': creds['secret'],
-            'passphrase': creds['passphrase']
-        },
-        sandbox_mode=False
-    )
+    return AuthAPI(sandbox_mode=True)
 
 
 def test_market_buy(sandbox_auth_api):
