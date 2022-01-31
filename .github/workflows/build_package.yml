@@ -3,13 +3,16 @@ name: Build & Publish to Test PyPi
 on:
   push:
 jobs:
-  test:
+  build:
     environment: dev
     runs-on: ubuntu-20.04
     env:
       sandbox_api_key: ${{ secrets.COINBASE_PRO_KEY }}
       sandbox_api_passphrase: ${{ secrets.COINBASE_PRO_PASSPHRASE }}
       sandbox_api_secret: ${{ secrets.COINBASE_PRO_SECRET }}
+      TWEEN_PASSWORD: ${{ secrets.TWEEN_PASSWORD }}
+      TWEEN_REPOSITORY: ${{ secrets.TWEEN_REPOSITORY }}
+      TWEEN_USERNAME: ${{ secrets.TWEEN_USERNAME }}
     steps:
     - uses: actions/checkout@v2
     - name: Setup Python
