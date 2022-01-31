@@ -39,6 +39,6 @@ jobs:
     - name: Build to Dist
       run: |
         python -m build
-        python -m twine upload -r testpypi dist/*
+        python -m twine upload --non-interactive --repository testpypi dist/*
 
 
