@@ -3,7 +3,6 @@
 import json
 import re
 import inspect
-
 import requests
 from cbp_client.auth import Auth
 from cbp_client.pagination import handle_pagination

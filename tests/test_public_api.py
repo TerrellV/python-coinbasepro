@@ -1,9 +1,6 @@
 from decimal import Decimal
 from datetime import datetime
-import types
-
 import pytest
-import requests
 
 from cbp_client import PublicAPI
 from cbp_client.api import API

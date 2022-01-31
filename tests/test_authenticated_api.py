@@ -1,10 +1,7 @@
 import pytest
-import json
-import pathlib
 from decimal import Decimal
 from datetime import datetime, timedelta
 import types
-import os
 
 from cbp_client import AuthAPI
 from cbp_client.api import API
