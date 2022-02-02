@@ -28,6 +28,7 @@ class AuthAPI(PublicAPI):
         self.auth = Auth(**credentials)
         self._accounts = []
         self.refresh_accounts()
+        self._this_profile_id = self._accounts[0].profile_id
 
     def accounts(self, currency: str = None) -> Union[List[Account], Account]:
 
@@ -208,3 +209,13 @@ class AuthAPI(PublicAPI):
                 'payment_method_id': payment_method_id
             }
         )
+
+    @property
+    def profile(self):
+        r = self.api.get(f'profiles/{self._this_profile_id}', auth=self.auth)
+        profile = r.json()
+        return profile
+
+    def get_profiles(self):
+        r = self.api.get(f'profiles', auth=self.auth)
+        return r.json()

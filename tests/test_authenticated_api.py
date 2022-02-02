@@ -172,3 +172,53 @@ def test_deposit(sandbox_auth_api):
     assert r.status_code == 200
     assert float(data['amount']) == float(amount)
     assert data['currency'] == currency
+
+
+def test_profile(sandbox_auth_api):
+    '''
+    >>> api.this_profile
+    {required_keys}
+
+    required_keys: id, user_id, name, active, is_default, created_at
+    '''
+    api = sandbox_auth_api
+    expected_profile = {
+        'id': '9a0445ac-7d5e-4261-a8cb-5840fd655b48',
+        'user_id': '59c9f79cb6ea17011a46b3e2',
+        'name': 'default',
+        'active': True,
+        'is_default': True,
+        'created_at': '2019-03-23T21:14:19.442971Z'
+    }
+    actual_profile = api.profile
+    actual_keys = actual_profile.keys()
+    actual_values = actual_profile.values()
+
+    # at least expected keys returned... ok if more
+    assert all([
+        key in actual_keys
+        for key in expected_profile.keys()
+    ])
+
+    # at least expected values returned... ok if more
+    assert all([
+        val in actual_values
+        for val in expected_profile.values()
+    ])
+
+
+def test_get_profiles(sandbox_auth_api):
+    '''
+    >>> api.get_profiles()
+    [{required_keys...}, {required_keys...}, ...]
+    required keys: id, user_id, name, active, is_default, created_at
+    '''
+
+    expected_keys = ['id', 'user_id', 'name', 'active', 'is_default', 'created_at']
+    api = sandbox_auth_api
+    profiles = api.get_profiles()
+    all([
+        k in expected_keys
+        for profile in profiles
+        for k in profile.keys()
+    ])
