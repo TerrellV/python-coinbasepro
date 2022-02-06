@@ -109,8 +109,8 @@ import json
 creds = json.loads(Path('credentials.json').read_text())['live']
 api = AuthAPI(creds)
 ```
+credentials.json
 ```json
-# credentials.json file loaded in python example above
 {
     "live": {
         "secret": "replace_this_with_secret",
