@@ -4,7 +4,7 @@ from typing import Union, List
 from types import GeneratorType
 from collections import namedtuple
 from cbp_client.helpers import load_credentials
-
+import logging
 from cbp_client.auth import Auth
 from cbp_client.api_public import PublicAPI
 
@@ -77,8 +77,18 @@ class AuthAPI(PublicAPI):
 
         def filter_orders_by_date(orders, start_date, end_date):
             for order in orders:
-                order_datetime = datetime.strptime(order['done_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
-                order_date_iso = order_datetime.date().isoformat()
+                try:
+                    order_datetime_str = order['done_at'].split('.')[0].strip('Z')
+                    order_datetime = datetime.strptime(order_datetime_str, '%Y-%m-%dT%H:%M:%S')
+                    order_date_iso = order_datetime.date().isoformat()
+                except ValueError as er:
+                    logging.error(
+                        'ERROR: Unable to parse date returned by coinbase api'
+                        f'\nUnexpected Order Date: {order["done_at"]}'
+                        f'\nExpected Patterns: %Y-%m-%dT%H:%M:%S.%fZ or %Y-%m-%dT%H:%M:%S'
+                    )
+                    raise er
+
                 if order_date_iso >= start_date and order_date_iso <= end_date:
                     yield order
 

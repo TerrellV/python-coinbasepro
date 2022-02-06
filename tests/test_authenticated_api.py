@@ -124,8 +124,10 @@ def test_account_history(sandbox_auth_api):
 
 
 def test_orders(sandbox_auth_api):
-    n_days_prior = (date.today() - timedelta(days=365)).isoformat()
+    n_days_prior = '2018-01-01'
     end_date = (date.today() - timedelta(days=4)).isoformat()
+
+    sandbox_auth_api = AuthAPI(sandbox_mode=False)
 
     all_orders = list(sandbox_auth_api.orders(
         start_date=n_days_prior,
@@ -147,7 +149,8 @@ def test_orders(sandbox_auth_api):
     assert all(o['status'] == 'done' for o in done_orders)
 
     def convert_coinbase_datetime(coinbase_datetime_str):
-        return datetime.strptime(coinbase_datetime_str, '%Y-%m-%dT%H:%M:%S.%fZ').date().isoformat()
+        dt_string = coinbase_datetime_str.split('.')[0].strip('Z')
+        return datetime.strptime(dt_string, '%Y-%m-%dT%H:%M:%S').date().isoformat()
 
     # check done at is after start date
     assert all(convert_coinbase_datetime(o['done_at']) >= n_days_prior for o in all_orders)
