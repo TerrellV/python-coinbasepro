@@ -127,8 +127,6 @@ def test_orders(sandbox_auth_api):
     n_days_prior = '2018-01-01'
     end_date = (date.today() - timedelta(days=4)).isoformat()
 
-    sandbox_auth_api = AuthAPI(sandbox_mode=False)
-
     all_orders = list(sandbox_auth_api.orders(
         start_date=n_days_prior,
         end_date=end_date,
