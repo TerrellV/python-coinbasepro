@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, date
 from typing import Union, List
 from types import GeneratorType
 from collections import namedtuple
@@ -70,22 +70,26 @@ class AuthAPI(PublicAPI):
         settled: bool, optional
             If true, returns only orders where: order['settled']=True
         '''
-        end_date = datetime.now().isoformat() if end_date is None else end_date
+        end_date = date.today().isoformat() if end_date is None else end_date
 
         no_filters = status is None and settled is None
         status_specified = status is not None
 
-        def _get_orders(params, date_field='created_at'):
+        def filter_orders_by_date(orders, start_date, end_date):
+            for order in orders:
+                order_datetime = datetime.strptime(order['done_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                order_date_iso = order_datetime.date().isoformat()
+                if order_date_iso >= start_date and order_date_iso <= end_date:
+                    yield order
+
+        def _get_orders(params):
             orders = self.api.get_paginated_endpoint(
                 endpoint='orders',
                 auth=self.auth,
                 start_date=start_date,
                 params=params
             )
-            return [
-                o for o in orders
-                if o[date_field] >= start_date <= end_date
-            ]
+            yield from filter_orders_by_date(orders, start_date, end_date)
 
         if no_filters:
             orders = _get_orders({'status': 'all'})

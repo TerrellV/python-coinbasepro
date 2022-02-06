@@ -1,6 +1,6 @@
 import pytest
 from decimal import Decimal
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import types
 
 from cbp_client import AuthAPI
@@ -23,7 +23,7 @@ def sandbox_auth_api():
 def test_market_buy(sandbox_auth_api):
 
     assert sandbox_auth_api.api.base_url == SANDBOX_URL
-    purchase_amount = 10
+    purchase_amount = 15
 
     coin_to_purchase = 'BTC'
 
@@ -124,27 +124,40 @@ def test_account_history(sandbox_auth_api):
 
 
 def test_orders(sandbox_auth_api):
-    ten_days_prior = (datetime.now() - timedelta(days=10)).isoformat()
+    n_days_prior = (date.today() - timedelta(days=365)).isoformat()
+    end_date = (date.today() - timedelta(days=4)).isoformat()
 
-    all_orders = sandbox_auth_api.orders(
-        start_date=ten_days_prior
-    )
-    settled_orders = sandbox_auth_api.orders(
-        start_date=ten_days_prior,
+    all_orders = list(sandbox_auth_api.orders(
+        start_date=n_days_prior,
+        end_date=end_date,
+    ))
+    settled_orders = list(sandbox_auth_api.orders(
+        start_date=n_days_prior,
+        end_date=end_date,
         settled=True
-    )
-    done_orders = sandbox_auth_api.orders(
-        start_date=ten_days_prior,
+    ))
+    done_orders = list(sandbox_auth_api.orders(
+        start_date=n_days_prior,
+        end_date=end_date,
         status='done'
-    )
+    ))
 
     assert len(list(all_orders)) > 0
     assert all(o['settled'] for o in settled_orders)
     assert all(o['status'] == 'done' for o in done_orders)
 
-    assert all(o['created_at'] >= ten_days_prior for o in all_orders)
-    assert all(o['created_at'] >= ten_days_prior for o in done_orders)
-    assert all(o['created_at'] >= ten_days_prior for o in settled_orders)
+    def convert_coinbase_datetime(coinbase_datetime_str):
+        return datetime.strptime(coinbase_datetime_str, '%Y-%m-%dT%H:%M:%S.%fZ').date().isoformat()
+
+    # check done at is after start date
+    assert all(convert_coinbase_datetime(o['done_at']) >= n_days_prior for o in all_orders)
+    assert all(convert_coinbase_datetime(o['done_at']) >= n_days_prior for o in done_orders)
+    assert all(convert_coinbase_datetime(o['done_at']) >= n_days_prior for o in settled_orders)
+
+    # check done at is before end date
+    assert all(convert_coinbase_datetime(o['done_at']) <= end_date for o in all_orders)
+    assert all(convert_coinbase_datetime(o['done_at']) <= end_date for o in done_orders)
+    assert all(convert_coinbase_datetime(o['done_at']) <= end_date for o in settled_orders)
 
 
 def test_payment_methods(sandbox_auth_api):

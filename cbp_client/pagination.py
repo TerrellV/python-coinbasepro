@@ -58,5 +58,4 @@ def handle_pagination(
         if earliest_date <= start_date:
             break
 
-        print('waiting')
         time.sleep(0.1)
